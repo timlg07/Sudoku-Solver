@@ -1,6 +1,9 @@
-package de.tim_greller.sudoku.cli;
+package de.tim_greller.sudoku.io;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -66,6 +69,9 @@ public final class Shell {
         String cmd = tokenizedInput[0].toLowerCase();
 
         switch (cmd) {
+        case "import":
+            importSudoku(tokenizedInput);
+            break;
 
         case "quit":
             return false;
@@ -78,6 +84,22 @@ public final class Shell {
         return true;
     }
     
+    private static void importSudoku(String[] tokenizedInput) {
+        if (tokenizedInput.length < 2) {
+            printError("No filename specified.");
+            return;
+        }
+        
+        File sudokuFile = new File(tokenizedInput[1]);
+        FileReader reader;
+        try {
+            reader = new FileReader(sudokuFile);
+        } catch (FileNotFoundException e) {
+            printError("The file \"" + sudokuFile.getAbsolutePath() 
+                        + "\" was not found.");
+        }
+    }
+
     /**
      * Prints an error text starting with {@code "Error!"} followed by the given
      * message.
