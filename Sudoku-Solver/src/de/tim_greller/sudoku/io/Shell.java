@@ -7,6 +7,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import de.tim_greller.sudoku.model.Board;
+
 /**
  * 
  */
@@ -54,7 +56,7 @@ public final class Shell {
             return true;
         }
 
-        String[] tokenizedInput = line.trim().split("\\s+");
+        String[] tokenizedInput = line.trim().split("\".*?\"|\\s+");
         return executeCommand(tokenizedInput);
     }
     
@@ -91,12 +93,16 @@ public final class Shell {
         }
         
         File sudokuFile = new File(tokenizedInput[1]);
-        FileReader reader;
-        try {
-            reader = new FileReader(sudokuFile);
-        } catch (FileNotFoundException e) {
+        
+        if (!(sudokuFile.exists() && sudokuFile.isFile())) {
             printError("The file \"" + sudokuFile.getAbsolutePath() 
                         + "\" was not found.");
+        }
+        
+        try {
+            Board board = SudokuFileParser.parseToBoard(sudokuFile);
+        } catch (IOException e) {
+            printError("Unable to read the file.");
         }
     }
 
