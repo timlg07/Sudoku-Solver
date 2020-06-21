@@ -57,7 +57,16 @@ public final class Shell {
             return true;
         }
 
-        String[] tokenizedInput = line.trim().split("\\s+", 2);
+        /* 
+         * For each whitespace this regex looks for subsequent pairs of quotes 
+         * (or sequences of any other characters except quotes) without matching
+         * them. If a whitespace is contained in a pair of quotes, the rest of
+         * the string (till the end "$") contains quotes that can't be matched
+         * in pairs and the whitespace will be ignored.
+         * The string should not contain quotes that are not in pairs.
+         */
+        String regex = "\\s+(?=([^\"]*|(\"[^\"]*\"))*$)";
+        String[] tokenizedInput = line.trim().split(regex);
         return executeCommand(tokenizedInput);
     }
     
@@ -94,8 +103,9 @@ public final class Shell {
         }
 
         String filename = tokenizedInput[1];
-        System.out.println(Arrays.toString(filename.split("(?=\".*\")")));
-        
+        System.out.println(Arrays.toString(tokenizedInput));
+        System.out.println(filename);
+        if(true)return;
         
         File sudokuFile = new File(filename);
         
