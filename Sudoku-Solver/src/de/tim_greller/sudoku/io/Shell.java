@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 
 import de.tim_greller.sudoku.model.Board;
 
@@ -56,7 +57,7 @@ public final class Shell {
             return true;
         }
 
-        String[] tokenizedInput = line.trim().split("\".*?\"|\\s+");
+        String[] tokenizedInput = line.trim().split("\\s+", 2);
         return executeCommand(tokenizedInput);
     }
     
@@ -91,8 +92,12 @@ public final class Shell {
             printError("No filename specified.");
             return;
         }
+
+        String filename = tokenizedInput[1];
+        System.out.println(Arrays.toString(filename.split("(?=\".*\")")));
         
-        File sudokuFile = new File(tokenizedInput[1]);
+        
+        File sudokuFile = new File(filename);
         
         if (!(sudokuFile.exists() && sudokuFile.isFile())) {
             printError("The file \"" + sudokuFile.getAbsolutePath() 
