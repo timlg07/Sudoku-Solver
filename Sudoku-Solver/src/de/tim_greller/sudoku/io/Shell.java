@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 
 import de.tim_greller.sudoku.model.Board;
+import de.tim_greller.sudoku.model.InvalidSudokuException;
 
 /**
  * 
@@ -102,13 +103,10 @@ public final class Shell {
             return;
         }
 
-        String filename = tokenizedInput[1];
-        System.out.println(Arrays.toString(tokenizedInput));
-        System.out.println(filename);
-        if(true)return;
+        // This removes leading and trailing double quotes from the filename.
+        String filename = tokenizedInput[1].replaceAll("^\"|\"$", "");  
         
         File sudokuFile = new File(filename);
-        
         if (!(sudokuFile.exists() && sudokuFile.isFile())) {
             printError("The file \"" + sudokuFile.getAbsolutePath() 
                         + "\" was not found.");
@@ -118,6 +116,8 @@ public final class Shell {
             Board board = SudokuFileParser.parseToBoard(sudokuFile);
         } catch (IOException e) {
             printError("Unable to read the file.");
+        } catch (InvalidSudokuException e) {
+            printError("The file contains an invalid sudoku.");
         }
     }
 
