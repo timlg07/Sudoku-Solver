@@ -4,6 +4,14 @@ package de.tim_greller.sudoku.model;
  *
  */
 public class SudokuBoard implements Board {
+    
+    private int boxRows;
+    private int boxCols;
+    
+    public SudokuBoard(int boxRows, int boxCols) {
+        this.boxRows = boxRows;
+        this.boxCols = boxCols;
+    }
 
     @Override
     public void setCell(Structure struct, int major, int minor, int number) throws InvalidSudokuException {
@@ -55,14 +63,12 @@ public class SudokuBoard implements Board {
     
     @Override
     public int getBoxRows() {
-        // TODO Auto-generated method stub
-        return 0;
+        return boxRows;
     }
     
     @Override
     public int getBoxColumns() {
-        // TODO Auto-generated method stub
-        return 0;
+        return boxCols;
     }
     
     @Override
