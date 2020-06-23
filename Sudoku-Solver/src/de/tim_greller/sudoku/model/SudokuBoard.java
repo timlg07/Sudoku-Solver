@@ -1,14 +1,40 @@
 package de.tim_greller.sudoku.model;
 
+import java.util.BitSet;
+
 /**
  *
  */
 public class SudokuBoard implements Board {
+    
+    private int boxRows;
+    private int boxCols;
+    private BitSet[] board;
+    private final boolean[] isFixed;
+    private int numbers;
+    
+    public SudokuBoard(int boxRows, int boxCols) {
+        this.boxRows = boxRows;
+        this.boxCols = boxCols;
+        numbers = boxRows * boxCols;
+        
+        int boardElements = numbers * numbers;
+        board = new BitSet[boardElements];
+        for (int i = 0; i < boardElements; i++) {
+            board[i] = new BitSet(numbers);
+        }
+        isFixed = new boolean[boardElements];
+    }
 
     @Override
-    public void setCell(Structure struct, int major, int minor, int number) throws InvalidSudokuException {
-        // TODO Auto-generated method stub
-        
+    public void setCell(Structure struct, int major, int minor, int number) 
+            throws InvalidSudokuException {
+        int index = calculateIndex(struct, major, minor);
+        if (!isFixed[index]) {
+            board[index].set(0, numbers, false);
+            board[index].set(number - 1);
+            isFixed[index] = true;
+        }
     }
     
     @Override
@@ -19,8 +45,16 @@ public class SudokuBoard implements Board {
     
     @Override
     public String prettyPrint() {
-        // TODO Auto-generated method stub
-        return null;
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < numbers * numbers; i++) {
+            result.append(isFixed[i] ? board[i].nextSetBit(0) + 1 : ".");
+            if ((i + 1) % numbers == 0) {
+                result.append("\n");
+            } else {
+                result.append(' ');
+            }
+        }
+        return result.toString();
     }
     
     @Override
@@ -37,8 +71,7 @@ public class SudokuBoard implements Board {
     
     @Override
     public int getNumbers() {
-        // TODO Auto-generated method stub
-        return 0;
+        return numbers;
     }
     
     @Override
@@ -49,20 +82,22 @@ public class SudokuBoard implements Board {
     
     @Override
     public int getCell(Structure struct, int major, int minor) {
-        // TODO Auto-generated method stub
-        return 0;
+        int index = calculateIndex(struct, major, minor);
+        if (isFixed[index]) {
+            return board[index].nextSetBit(0) + 1;
+        } else {
+            return Board.UNSET_CELL;
+        }
     }
     
     @Override
     public int getBoxRows() {
-        // TODO Auto-generated method stub
-        return 0;
+        return boxRows;
     }
     
     @Override
     public int getBoxColumns() {
-        // TODO Auto-generated method stub
-        return 0;
+        return boxCols;
     }
     
     @Override
@@ -75,6 +110,28 @@ public class SudokuBoard implements Board {
     public Board clone() {
      // TODO Auto-generated method stub
         return null;
+    }
+    
+    private int calculateIndex(Structure struct, int major, int minor) {
+        int x = 0;
+        int y = 0;
+        switch(struct) {
+        case BOX: 
+            x = (major % boxRows) * boxCols + minor % boxCols;
+            y = (major / boxRows) * boxRows + minor / boxCols;
+            break;
+            
+        case ROW:
+            x = minor;
+            y = major;
+            break;
+            
+        case COL:
+            x = major;
+            y = minor;
+            break;
+        }
+        return y * numbers + x;
     }
     
     /*

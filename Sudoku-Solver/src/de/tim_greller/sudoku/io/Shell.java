@@ -6,6 +6,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
+
+import de.tim_greller.sudoku.model.Board;
+import de.tim_greller.sudoku.model.InvalidSudokuException;
 
 /**
  * 
@@ -54,7 +58,16 @@ public final class Shell {
             return true;
         }
 
-        String[] tokenizedInput = line.trim().split("\\s+");
+        /* 
+         * For each whitespace this regex looks for subsequent pairs of quotes 
+         * (or sequences of any other characters except quotes) without matching
+         * them. If a whitespace is contained in a pair of quotes, the rest of
+         * the string (till the end "$") contains quotes that can't be matched
+         * in pairs and the whitespace will be ignored.
+         * The string should not contain quotes that are not in pairs.
+         */
+        String regex = "\\s+(?=([^\"]*|(\"[^\"]*\"))*$)";
+        String[] tokenizedInput = line.trim().split(regex);
         return executeCommand(tokenizedInput);
     }
     
@@ -89,14 +102,22 @@ public final class Shell {
             printError("No filename specified.");
             return;
         }
+
+        // This removes leading and trailing double quotes from the filename.
+        String filename = tokenizedInput[1].replaceAll("^\"|\"$", "");  
         
-        File sudokuFile = new File(tokenizedInput[1]);
-        FileReader reader;
-        try {
-            reader = new FileReader(sudokuFile);
-        } catch (FileNotFoundException e) {
+        File sudokuFile = new File(filename);
+        if (!(sudokuFile.exists() && sudokuFile.isFile())) {
             printError("The file \"" + sudokuFile.getAbsolutePath() 
                         + "\" was not found.");
+        }
+        
+        try {
+            Board board = SudokuFileParser.parseToBoard(sudokuFile);
+        } catch (IOException e) {
+            printError("Unable to read the file.");
+        } catch (InvalidSudokuException e) {
+            printError("The file contains an invalid sudoku.");
         }
     }
 
