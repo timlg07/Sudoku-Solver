@@ -22,6 +22,7 @@ public class SudokuBoard implements Board {
         board = new BitSet[boardElements];
         for (int i = 0; i < boardElements; i++) {
             board[i] = new BitSet(numbers);
+            board[i].set(0, numbers);
         }
         isFixed = new boolean[boardElements];
     }
