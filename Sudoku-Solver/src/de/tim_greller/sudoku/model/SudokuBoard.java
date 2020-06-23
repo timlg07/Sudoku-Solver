@@ -36,6 +36,11 @@ public class SudokuBoard implements Board {
             board[index].set(number - 1);
             isFixed[index] = true;
         }
+        
+        if (!isValid()) {
+            throw new InvalidSudokuException(
+                    "The Sudoku changed to unsolvable by setting a number.");
+        }
     }
     
     @Override
@@ -43,9 +48,10 @@ public class SudokuBoard implements Board {
             int number) throws InvalidSudokuException {
         int index = calculateIndex(struct, major, minor);
         board[index].clear(number - 1);
+        
         if (board[index].cardinality() < 1) {
             throw new InvalidSudokuException(
-                    "One cell has no possibilities left");
+                    "The sudoku contains a cell with no possibilities left");
         }
     }
     
@@ -53,7 +59,7 @@ public class SudokuBoard implements Board {
     public String prettyPrint() {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < numbers * numbers; i++) {
-            result.append(isFixed[i] ? board[i].nextSetBit(0) + 1 : ".");
+            result.append(isFixed[i] ? getFixedCell(i) : ".");
             if ((i + 1) % numbers == 0) {
                 result.append("\n");
             } else {
@@ -65,8 +71,12 @@ public class SudokuBoard implements Board {
     
     @Override
     public boolean isSolution() {
-        // TODO Auto-generated method stub
-        return false;
+        for (boolean isCellFixed : isFixed) {
+            if (!isCellFixed) {
+                return false;
+            }
+        }
+        return true;
     }
     
     @Override
@@ -97,7 +107,7 @@ public class SudokuBoard implements Board {
     public int getCell(Structure struct, int major, int minor) {
         int index = calculateIndex(struct, major, minor);
         if (isFixed[index]) {
-            return board[index].nextSetBit(0) + 1;
+            return getFixedCell(index);
         } else {
             return Board.UNSET_CELL;
         }
@@ -121,10 +131,30 @@ public class SudokuBoard implements Board {
     
     @Override
     public Board clone() {
-     // TODO Auto-generated method stub
+        // TODO Auto-generated method stub
         return null;
     }
+
+    /**
+     * Returns the value of a fixed cell with the given index by returning the 
+     * first (and only) possibility of the cell.
+     * 
+     * @param index The absolute index of the cell.
+     * @return The value of the cell.
+     */
+    private int getFixedCell(int index) {
+        return board[index].nextSetBit(0) + 1;
+    }
     
+    /**
+     * Converts from the given coordinates referring to a specific 
+     * {@link Structure} to the absolute index used internally.
+     * 
+     * @param struct The coordinate type of the cell.
+     * @param  major The major coordinate component of the cell.
+     * @param  minor The minor coordinate component of the cell. 
+     * @return The absolute index of the cell.
+     */
     private int calculateIndex(Structure struct, int major, int minor) {
         int x = 0;
         int y = 0;
@@ -147,25 +177,8 @@ public class SudokuBoard implements Board {
         return y * numbers + x;
     }
     
-    /*
-    SudokuBoard(int, int)
-    clone() : SudokuBoard
-    compareTo(Board) : int
-    getBoxRows() : int
-    getBoxColumns() : int
-    getNumbers() : int
-    setCell(Structure, int, int, int) : void
-    getLastCellSet() : int[]
-    getCell(Structure, int, int) : int
-    isSolution() : boolean
-    getPossibilities(Structure, int, int) : int[]
-    removePossibility(Structure, int, int, int) : void
-    getRow(Structure, int, int) : int
-    getCol(Structure, int, int) : int
-    getBox(Structure, int, int) : int
-    getBoxMinor(Structure, int, int) : int
-    toString() : String
-    prettyPrint() : String
-     */
+    private boolean isValid() {
+        return false;
+    }
 
 }
