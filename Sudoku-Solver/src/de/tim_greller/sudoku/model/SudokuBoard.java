@@ -1,5 +1,7 @@
 package de.tim_greller.sudoku.model;
 
+import java.util.BitSet;
+
 /**
  *
  */
@@ -7,10 +9,21 @@ public class SudokuBoard implements Board {
     
     private int boxRows;
     private int boxCols;
+    private BitSet[] board;
+    private final boolean[] isFixed;
+    private int numbers;
     
     public SudokuBoard(int boxRows, int boxCols) {
         this.boxRows = boxRows;
         this.boxCols = boxCols;
+        numbers = boxRows * boxCols;
+        
+        int boardElements = numbers * numbers;
+        board = new BitSet[boardElements];
+        for (int i = 0; i < boardElements; i++) {
+            board[i] = new BitSet(numbers);
+        }
+        isFixed = new boolean[boardElements];
     }
 
     @Override
@@ -45,8 +58,7 @@ public class SudokuBoard implements Board {
     
     @Override
     public int getNumbers() {
-        // TODO Auto-generated method stub
-        return 0;
+        return numbers;
     }
     
     @Override
@@ -81,6 +93,28 @@ public class SudokuBoard implements Board {
     public Board clone() {
      // TODO Auto-generated method stub
         return null;
+    }
+    
+    private int calculateIndex(Structure struct, int major, int minor) {
+        int x = 0;
+        int y = 0;
+        switch(struct) {
+        case BOX: 
+            x = (major % boxRows) * boxCols + minor % boxCols;
+            y = (major / boxRows) * boxRows + minor / boxCols;
+            break;
+            
+        case ROW:
+            x = minor;
+            y = major;
+            break;
+            
+        case COL:
+            x = major;
+            y = minor;
+            break;
+        }
+        return y * numbers + x;
     }
     
     /*
