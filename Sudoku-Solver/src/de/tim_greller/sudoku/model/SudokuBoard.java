@@ -65,7 +65,14 @@ public class SudokuBoard implements Board {
     
     @Override
     public int[] getPossibilities(Structure struct, int major, int minor) {
-        // TODO Auto-generated method stub
+        BitSet cell = board[calculateIndex(struct, major, minor)];
+        int[] possibilities = new int[cell.cardinality()];
+        
+        for (int index = 0, value = 0; index < possibilities.length; index++) {
+            value = cell.nextSetBit(value);
+            possibilities[index] = value;
+        }
+        
         return null;
     }
     
