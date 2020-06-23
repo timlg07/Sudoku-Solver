@@ -14,6 +14,9 @@ import de.tim_greller.sudoku.model.SudokuBoard;
 
 public final class SudokuFileParser {
     
+    /**
+     * The delimiter between characters in a sudoku-file.
+     */
     private static final String DELIMITER = "\\s+";
 
     public static Board parseToBoard(File sudokuFile) 
@@ -21,34 +24,22 @@ public final class SudokuFileParser {
         BufferedReader in = new BufferedReader(new FileReader(sudokuFile));
         
         // Use the dimensions specified in the first line to create the Board.
-        String line = in.readLine(); // throws IOException
+        String line = in.readLine();
         Board board = createBoard(line.split(DELIMITER));
         if (board == null) {
-            abortParse("Invalid first line.", in);
+            in.close();
             return null;
         }
-        int boardSize = board.getBoxColumns() * board.getBoxRows();
         
-        for (int i = 0; i < boardSize; i++) {
-            line = in.readLine(); // throws IOException
-            if (line == null) {
-                abortParse("Invalid amount of lines.", in);
-                return null;
-            }
-            
-            String[] row = line.trim().split(DELIMITER);
-            if (row.length != boardSize) {
-                abortParse("Invalid line length.", in);
-                return null;
-            }
-            
-            if (!appendRow(board, i, row)) {
-                abortParse("Invalid Board data.", in);
+        for (int i = 0; i < board.getNumbers(); i++) {
+            line = in.readLine();
+            if (!appendRow(board, i, line)) {
+                in.close();
                 return null;
             }
         }
 
-        in.close(); // throws IOException
+        in.close();
         return board;
     }
     
@@ -59,17 +50,31 @@ public final class SudokuFileParser {
             if (rows.isPresent() && cols.isPresent()) {
                 return new SudokuBoard(rows.get(), cols.get());
             }
-        } 
+        }
+        
+        printParseError("Invalid first line.");
         return null;
     }
     
-    private static boolean appendRow(Board board, int rowIndex, String[] row) 
+    private static boolean appendRow(Board board, int rowIndex, String line) 
             throws InvalidSudokuException {
+        if (line == null) {
+            printParseError("Invalid amount of lines.");
+            return false;
+        }
+        
+        String[] row = line.trim().split(DELIMITER);
+        if (row.length != board.getNumbers()) {
+            printParseError("Invalid line length.");
+            return false;
+        }
+        
         for (int i = 0; i < row.length; i++) {
             int cellValue = parseCellValue(row[i]);
             if (cellValue > 0 && cellValue <= row.length) {
                 board.setCell(Structure.ROW, rowIndex, i, cellValue);
             } else if (cellValue != Board.UNSET_CELL) {
+                printParseError("Invalid Board data.");
                 return false;
             }
         }
@@ -102,10 +107,8 @@ public final class SudokuFileParser {
         }
     }
     
-    private static void abortParse(String message, Reader activeReader) 
-            throws IOException {
+    private static void printParseError(String message) {
         System.out.println("Parse error! " + message);
-        activeReader.close();
     }
 
 }
