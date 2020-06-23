@@ -27,9 +27,14 @@ public class SudokuBoard implements Board {
     }
 
     @Override
-    public void setCell(Structure struct, int major, int minor, int number) throws InvalidSudokuException {
-        // TODO Auto-generated method stub
-        
+    public void setCell(Structure struct, int major, int minor, int number) 
+            throws InvalidSudokuException {
+        int index = calculateIndex(struct, major, minor);
+        if (!isFixed[index]) {
+            board[index].set(0, numbers, false);
+            board[index].set(number - 1);
+            isFixed[index] = true;
+        }
     }
     
     @Override
