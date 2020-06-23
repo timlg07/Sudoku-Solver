@@ -31,16 +31,21 @@ public class SudokuBoard implements Board {
             throws InvalidSudokuException {
         int index = calculateIndex(struct, major, minor);
         if (!isFixed[index]) {
-            board[index].set(0, numbers, false);
+            board[index].clear(0, numbers);
             board[index].set(number - 1);
             isFixed[index] = true;
         }
     }
     
     @Override
-    public void removePossibility(Structure struct, int major, int minor, int number) throws InvalidSudokuException {
-        // TODO Auto-generated method stub
-        
+    public void removePossibility(Structure struct, int major, int minor,
+            int number) throws InvalidSudokuException {
+        int index = calculateIndex(struct, major, minor);
+        board[index].clear(number - 1);
+        if (board[index].cardinality() < 1) {
+            throw new InvalidSudokuException(
+                    "One cell has no possibilities left");
+        }
     }
     
     @Override
