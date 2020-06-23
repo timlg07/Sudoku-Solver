@@ -73,7 +73,7 @@ public class SudokuBoard implements Board {
             possibilities[index] = value;
         }
         
-        return null;
+        return possibilities;
     }
     
     @Override
