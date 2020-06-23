@@ -45,8 +45,16 @@ public class SudokuBoard implements Board {
     
     @Override
     public String prettyPrint() {
-        // TODO Auto-generated method stub
-        return null;
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < numbers * numbers; i++) {
+            result.append(isFixed[i] ? board[i].nextSetBit(0) + 1 : ".");
+            if ((i + 1) % numbers == 0) {
+                result.append("\n");
+            } else {
+                result.append(' ');
+            }
+        }
+        return result.toString();
     }
     
     @Override
@@ -74,8 +82,12 @@ public class SudokuBoard implements Board {
     
     @Override
     public int getCell(Structure struct, int major, int minor) {
-        // TODO Auto-generated method stub
-        return 0;
+        int index = calculateIndex(struct, major, minor);
+        if (isFixed[index]) {
+            return board[index].nextSetBit(0) + 1;
+        } else {
+            return Board.UNSET_CELL;
+        }
     }
     
     @Override

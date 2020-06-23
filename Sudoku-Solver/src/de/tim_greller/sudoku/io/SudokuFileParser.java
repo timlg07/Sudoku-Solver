@@ -40,6 +40,7 @@ public final class SudokuFileParser {
         }
 
         in.close();
+        System.out.println(board.prettyPrint());
         return board;
     }
     
