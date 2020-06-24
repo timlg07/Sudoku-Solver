@@ -1,5 +1,6 @@
 package de.tim_greller.sudoku.model;
 
+import java.util.Arrays;
 import java.util.BitSet;
 
 /**
@@ -31,15 +32,22 @@ public class SudokuBoard implements Board {
     public void setCell(Structure struct, int major, int minor, int number) 
             throws InvalidSudokuException {
         int index = calculateIndex(struct, major, minor);
-        if (!isFixed[index]) {
-            board[index].clear(0, numbers);
-            board[index].set(number - 1);
-            isFixed[index] = true;
-        }
-        
-        if (!isValid()) {
+        if (isFixed[index]) {
+            throw new IllegalStateException("This cell is already fixed.");
+        } else if (!board[index].get(number - 1)) {
             throw new InvalidSudokuException(
-                    "The Sudoku changed to unsolvable by setting a number.");
+                    "This cell cannot be set to " + number);
+        }
+        board[index].clear(0, numbers);
+        board[index].set(number - 1);
+        isFixed[index] = true;
+
+        // Remove the number from all structures containing this cell.
+        for (Structure currentStructure : Structure.values()) {
+            int currentMajor = getRelativeIndex(index, currentStructure);
+            for (int i = 0; i < numbers; i++) {
+                removePossibility(currentStructure, currentMajor, i, number);
+            }
         }
     }
     
@@ -47,11 +55,13 @@ public class SudokuBoard implements Board {
     public void removePossibility(Structure struct, int major, int minor,
             int number) throws InvalidSudokuException {
         int index = calculateIndex(struct, major, minor);
-        board[index].clear(number - 1);
-        
-        if (board[index].cardinality() < 1) {
-            throw new InvalidSudokuException(
-                    "The sudoku contains a cell with no possibilities left");
+        if (!isFixed[index]) {
+            board[index].clear(number - 1);
+
+            if (board[index].isEmpty()) {
+                throw new InvalidSudokuException("The sudoku contains a "
+                        + "cell with no possibilities left");
+            }
         }
     }
     
@@ -81,11 +91,21 @@ public class SudokuBoard implements Board {
     
     @Override
     public int[] getPossibilities(Structure struct, int major, int minor) {
-        BitSet cell = board[calculateIndex(struct, major, minor)];
+        return getPossibilities(calculateIndex(struct, major, minor));
+    }
+    
+    private int[] getPossibilities(int absoluteIndex) {
+        BitSet cell = board[absoluteIndex];
         int[] possibilities = new int[cell.cardinality()];
         
+        /*
+         * Iterate all possibilities by finding the next possibility bit after 
+         * the last one and store its index. Begin search at fromIndex = 0.
+         */
         for (int index = 0, value = 0; index < possibilities.length; index++) {
-            value = cell.nextSetBit(value);
+            // This value represents the start index for the next iteration and
+            // the 1-indizierter value.
+            value = cell.nextSetBit(value) + 1;
             possibilities[index] = value;
         }
         
@@ -156,8 +176,8 @@ public class SudokuBoard implements Board {
      * @return The absolute index of the cell.
      */
     private int calculateIndex(Structure struct, int major, int minor) {
-        int x = 0;
-        int y = 0;
+        int x;
+        int y;
         switch(struct) {
         case BOX: 
             x = (major % boxRows) * boxCols + minor % boxCols;
@@ -173,12 +193,39 @@ public class SudokuBoard implements Board {
             x = major;
             y = minor;
             break;
+            
+        default:
+            throw new IllegalArgumentException(
+                    "Unexpected structure: " + struct);
         }
         return y * numbers + x;
     }
-    
-    private boolean isValid() {
-        return false;
-    }
 
+    private int getBox(Structure struct, int major, int minor) {
+        switch(struct) {
+        case BOX:
+            return major;
+        case ROW:
+            return (major / boxRows) * boxRows + minor / boxCols;
+        case COL:
+            return (minor / boxRows) * boxRows + major / boxCols;
+        default:
+            throw new IllegalArgumentException(
+                    "Unexpected structure: " + struct);
+        }
+    }
+    
+    private int getRelativeIndex(int index, Structure target) {
+        switch (target) {
+        case BOX:
+            return getBox(Structure.ROW, index / numbers, index % numbers);
+        case ROW:
+            return index / numbers;
+        case COL:
+            return index % numbers;
+        default:
+            throw new IllegalArgumentException(
+                    "Unexpected structure: " + target);
+        }
+    }
 }
