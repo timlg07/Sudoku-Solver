@@ -49,6 +49,8 @@ public class SudokuBoard implements Board {
                 removePossibility(currentStructure, currentMajor, i, number);
             }
         }
+        System.out.println("Set num " + number);
+        System.out.println(unprettyPrint());
     }
     
     @Override
@@ -70,6 +72,20 @@ public class SudokuBoard implements Board {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < numbers * numbers; i++) {
             result.append(isFixed[i] ? getFixedCell(i) : ".");
+            if ((i + 1) % numbers == 0) {
+                result.append("\n");
+            } else {
+                result.append(' ');
+            }
+        }
+        return result.toString();
+    }
+    
+    public String unprettyPrint() {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < numbers * numbers; i++) {
+            result.append(isFixed[i] ? getFixedCell(i) 
+                                     : Arrays.toString(getPossibilities(i)));
             if ((i + 1) % numbers == 0) {
                 result.append("\n");
             } else {
