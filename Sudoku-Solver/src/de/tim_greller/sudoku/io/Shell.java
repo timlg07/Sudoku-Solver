@@ -10,6 +10,7 @@ import java.util.Arrays;
 
 import de.tim_greller.sudoku.model.Board;
 import de.tim_greller.sudoku.model.EnforcedCell;
+import de.tim_greller.sudoku.model.EnforcedNumber;
 import de.tim_greller.sudoku.model.InvalidSudokuException;
 import de.tim_greller.sudoku.model.SudokuBoardSolver;
 import de.tim_greller.sudoku.model.SudokuSolver;
@@ -119,6 +120,7 @@ public final class Shell {
     private static void setupSolver() {
         currentSolver = new SudokuBoardSolver();
         currentSolver.addSaturator(new EnforcedCell());
+        currentSolver.addSaturator(new EnforcedNumber());
     }
     
     private static boolean isBoardImported() {
