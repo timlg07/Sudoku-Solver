@@ -303,6 +303,7 @@ public class SudokuBoard implements Board {
         return y * numbers + x;
     }
 
+    // TODO: remove
     /*private int getBox(Structure struct, int major, int minor) {
         switch(struct) {
         case BOX:
