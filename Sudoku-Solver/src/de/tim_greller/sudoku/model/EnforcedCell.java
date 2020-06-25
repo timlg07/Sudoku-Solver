@@ -2,6 +2,11 @@ package de.tim_greller.sudoku.model;
 
 public class EnforcedCell implements Saturator {
 
+    /** 
+     * {@inheritDoc}
+     * <p>This strategy traverses all cells of the board and sets the cells that
+     * have only one possible value left to this value.</p>
+     */
     @Override
     public boolean saturate(Board board) throws UnsolvableSudokuException {
         boolean modifiedBoard = false;
@@ -11,8 +16,7 @@ public class EnforcedCell implements Saturator {
             for (int minor = 0; minor < board.getNumbers(); minor++) {
                 int[] possibilities = board.getPossibilities(
                         struct, major, minor);
-                int value = board.getCell(struct, major, minor);
-                if (possibilities.length == 1 && value == Board.UNSET_CELL) {
+                if ((possibilities != null) && (possibilities.length == 1)) {
                     try {
                         board.setCell(struct, major, minor, possibilities[0]);
                     } catch (InvalidSudokuException e) {
