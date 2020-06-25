@@ -28,32 +28,36 @@ public final class SudokuFileParser {
      * 
      * @param sudokuFile The file that should be parsed.
      * @return The created board or {@code null} if no valid board can be built.
-     * @throws IOException The read-process on the file failed.
      * @throws InvalidSudokuException The sudoku from the file cannot be solved.
      */
     public static Board parseToBoard(File sudokuFile) 
-            throws IOException, InvalidSudokuException {
-        BufferedReader in = new BufferedReader(new FileReader(sudokuFile));
-        
-        // Use the dimensions specified in the first line to create the Board.
-        String line = in.readLine();
-        Board board = createBoard(line.split(DELIMITER));
-        if (board == null) {
-            in.close();
-            return null;
-        }
-        
-        for (int i = 0; i < board.getNumbers(); i++) {
-            line = in.readLine();
-            if (!appendRow(board, i, line)) {
-                in.close();
+            throws InvalidSudokuException {
+        try (BufferedReader in 
+                = new BufferedReader(new FileReader(sudokuFile))){
+            
+            // Create a Board using the dimensions specified in the first line.
+            String line = in.readLine();
+            if (line == null) {
+                printParseError("The file is empty.");
                 return null;
             }
+            Board board = createBoard(line.split(DELIMITER));
+            if (board == null) {
+                return null;
+            }
+            
+            for (int i = 0; i < board.getNumbers(); i++) {
+                line = in.readLine();
+                if (!appendRow(board, i, line)) {
+                    return null;
+                }
+            }
+            return board;
+            
+        } catch (IOException e) {
+            printParseError("Unable to read the file.");
+            return null;
         }
-
-        in.close();
-        System.out.println(board.prettyPrint());
-        return board;
     }
     
     /**

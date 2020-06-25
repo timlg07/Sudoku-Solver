@@ -147,8 +147,6 @@ public final class Shell {
         
         try {
             currentBoard = SudokuFileParser.parseToBoard(sudokuFile);
-        } catch (IOException e) {
-            printError("Unable to read the file.");
         } catch (InvalidSudokuException e) {
             printError("The file contains an invalid sudoku.");
         }
