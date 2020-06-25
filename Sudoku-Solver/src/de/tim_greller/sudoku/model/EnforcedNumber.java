@@ -1,7 +1,5 @@
 package de.tim_greller.sudoku.model;
 
-import java.util.Arrays;
-
 public class EnforcedNumber implements Saturator {
     
     /** 
