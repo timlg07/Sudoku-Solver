@@ -22,6 +22,11 @@ public final class SudokuFileParser {
      */
     private static final String DELIMITER = "\\s+";
 
+    /** 
+     * Private constructor to prevent instantiation. 
+     */
+    private SudokuFileParser() { }
+    
     /**
      * Parses the given sudoku-file to a Board. Returns {@code null} if the file
      * contains (syntactic or semantic) invalid data.
@@ -33,7 +38,7 @@ public final class SudokuFileParser {
     public static Board parseToBoard(File sudokuFile) 
             throws InvalidSudokuException {
         try (BufferedReader in 
-                = new BufferedReader(new FileReader(sudokuFile))){
+                = new BufferedReader(new FileReader(sudokuFile))) {
             
             // Create a Board using the dimensions specified in the first line.
             String line = in.readLine();

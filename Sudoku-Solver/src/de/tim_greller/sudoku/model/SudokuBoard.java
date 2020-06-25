@@ -121,11 +121,11 @@ public class SudokuBoard implements Board {
         
         /*
          * Iterate all possibilities by finding the next possibility bit after 
-         * the last one and store its index. Begin search at fromIndex = 0.
+         * the last one and store its index.
+         * The value represents the fromIndex for the next iteration and the
+         * current 1-indexed possibility value that gets stored.
          */
         for (int index = 0, value = 0; index < possibilities.length; index++) {
-            // This value represents the start index for the next iteration and
-            // the 1-indizierter value.
             value = cell.nextSetBit(value) + 1;
             possibilities[index] = value;
         }

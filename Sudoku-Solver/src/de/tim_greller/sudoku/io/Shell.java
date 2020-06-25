@@ -72,7 +72,7 @@ public final class Shell {
          * them. If a whitespace is contained in a pair of quotes, the rest of
          * the string (till the end "$") contains quotes that can't be matched
          * in pairs and the whitespace will be ignored.
-         * The string should not contain quotes that are not in pairs.
+         * The string should therefore not contain quotes that are not in pairs.
          */
         String regex = "\\s+(?=([^\"]*|(\"[^\"]*\"))*$)";
         String[] tokenizedInput = line.trim().split(regex);
