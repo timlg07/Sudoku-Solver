@@ -13,6 +13,7 @@ public class SudokuBoard implements Board {
     private BitSet[] board;
     private final boolean[] isFixed;
     private int numbers;
+    private int lastCellSetIndex;
     
     public SudokuBoard(int boxRows, int boxCols) {
         this.boxRows = boxRows;
@@ -41,6 +42,7 @@ public class SudokuBoard implements Board {
         board[index].clear(0, numbers);
         board[index].set(number - 1);
         isFixed[index] = true;
+        lastCellSetIndex = index;
 
         // Remove the number from all structures containing this cell.
         for (Structure currentStructure : Structure.values()) {
@@ -135,8 +137,8 @@ public class SudokuBoard implements Board {
     
     @Override
     public int[] getLastCellSet() {
-        // TODO Auto-generated method stub
-        return null;
+        return new int[]{
+                lastCellSetIndex / numbers, lastCellSetIndex % numbers};
     }
     
     @Override
