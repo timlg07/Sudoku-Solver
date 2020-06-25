@@ -88,7 +88,7 @@ public interface Board extends Cloneable, Comparable<Board> {
     boolean isSolution();
 
     /**
-     * Gets all possible values of a cell, which can assigned to the cell
+     * Gets all possible values of a cell, which can be assigned to the cell
      * without making the Sudoku invalid. If the cell is already set,
      * {@code null} is returned. The returned array may be changed without
      * having any effect on the board.
