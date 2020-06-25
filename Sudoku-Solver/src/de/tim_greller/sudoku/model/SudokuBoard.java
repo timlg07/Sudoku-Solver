@@ -35,10 +35,13 @@ public class SudokuBoard implements Board {
         int index = calculateIndex(struct, major, minor);
         if (isFixed[index]) {
             throw new IllegalStateException("This cell is already fixed.");
+        } else if (number == Board.UNSET_CELL) {
+            return;
         } else if (!board[index].get(number - 1)) {
             throw new InvalidSudokuException(
                     "This cell cannot be set to " + number);
         }
+        
         board[index].clear(0, numbers);
         board[index].set(number - 1);
         isFixed[index] = true;
@@ -169,8 +172,19 @@ public class SudokuBoard implements Board {
     
     @Override
     public Board clone() {
-        // TODO Auto-generated method stub
-        return null;
+        Board clone = new SudokuBoard(boxRows, boxCols);
+        Structure struct = Structure.ROW;
+        for (int structNr = 0; structNr < numbers; structNr++) {
+            for (int element = 0; element < numbers; element++) {
+                int value = getCell(struct, structNr, element);
+                try {
+                    clone.setCell(struct, structNr, element, value);
+                } catch (InvalidSudokuException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return clone;
     }
 
     /**
@@ -219,7 +233,7 @@ public class SudokuBoard implements Board {
         return y * numbers + x;
     }
 
-    private int getBox(Structure struct, int major, int minor) {
+    /*private int getBox(Structure struct, int major, int minor) {
         switch(struct) {
         case BOX:
             return major;
@@ -231,12 +245,13 @@ public class SudokuBoard implements Board {
             throw new IllegalArgumentException(
                     "Unexpected structure: " + struct);
         }
-    }
+    }//*/
     
     private int getRelativeIndex(int index, Structure target) {
         switch (target) {
         case BOX:
-            return getBox(Structure.ROW, index / numbers, index % numbers);
+            return ((index / numbers) / boxRows) * boxRows + (index % numbers) / boxCols;
+            //return getBox(Structure.ROW, index / numbers, index % numbers);
         case ROW:
             return index / numbers;
         case COL:

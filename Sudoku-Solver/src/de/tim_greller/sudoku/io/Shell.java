@@ -9,12 +9,18 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 
 import de.tim_greller.sudoku.model.Board;
+import de.tim_greller.sudoku.model.EnforcedCell;
 import de.tim_greller.sudoku.model.InvalidSudokuException;
+import de.tim_greller.sudoku.model.SudokuBoardSolver;
+import de.tim_greller.sudoku.model.SudokuSolver;
 
 /**
  * 
  */
 public final class Shell {
+    
+    private static Board currentBoard;
+    private static SudokuSolver currentSolver;
     
     /** 
      * Private constructor to prevent instantiation. 
@@ -29,6 +35,8 @@ public final class Shell {
      * @throws IOException If an I/O error occurs.
      */
     public static void main(String[] args) throws IOException {
+        setupSolver();
+        
         BufferedReader stdin 
                 = new BufferedReader(new InputStreamReader(System.in));
         boolean continueExecution = true;
@@ -85,7 +93,11 @@ public final class Shell {
         case "import":
             importSudoku(tokenizedInput);
             break;
-
+            
+        case "saturate":
+            saturateSudoku();
+            break;
+            
         case "quit":
             return false;
             
@@ -97,6 +109,27 @@ public final class Shell {
         return true;
     }
     
+    private static void saturateSudoku() {
+        if (isBoardImported()) {
+            Board saturatedBoard = currentSolver.saturate(currentBoard);
+            System.out.println(saturatedBoard.prettyPrint());
+        }
+    }
+    
+    private static void setupSolver() {
+        currentSolver = new SudokuBoardSolver();
+        currentSolver.addSaturator(new EnforcedCell());
+    }
+    
+    private static boolean isBoardImported() {
+        if (currentBoard == null) {
+            printError("No sudoku imported.");
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     private static void importSudoku(String[] tokenizedInput) {
         if (tokenizedInput.length < 2) {
             printError("No filename specified.");
@@ -113,7 +146,7 @@ public final class Shell {
         }
         
         try {
-            Board board = SudokuFileParser.parseToBoard(sudokuFile);
+            currentBoard = SudokuFileParser.parseToBoard(sudokuFile);
         } catch (IOException e) {
             printError("Unable to read the file.");
         } catch (InvalidSudokuException e) {
