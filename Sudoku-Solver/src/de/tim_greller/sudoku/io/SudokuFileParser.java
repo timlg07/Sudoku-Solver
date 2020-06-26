@@ -25,7 +25,9 @@ public final class SudokuFileParser {
     /** 
      * Private constructor to prevent instantiation. 
      */
-    private SudokuFileParser() { }
+    private SudokuFileParser() {
+        throw new AssertionError();
+    }
     
     /**
      * Parses the given sudoku-file to a Board. Returns {@code null} if the file
@@ -51,6 +53,7 @@ public final class SudokuFileParser {
                 return null;
             }
             
+            // Append each line of the file as row to the board.
             for (int i = 0; i < board.getNumbers(); i++) {
                 line = in.readLine();
                 if (!appendRow(board, i, line)) {
@@ -111,7 +114,7 @@ public final class SudokuFileParser {
         
         for (int i = 0; i < row.length; i++) {
             int cellValue = parseCellValue(row[i]);
-            if (cellValue > 0 && cellValue <= row.length) {
+            if (cellValue > 0 && cellValue <= board.getNumbers()) {
                 board.setCell(Structure.ROW, rowIndex, i, cellValue);
             } else if (cellValue != Board.UNSET_CELL) {
                 printParseError("Invalid Board data.");
@@ -123,7 +126,7 @@ public final class SudokuFileParser {
     
     /**
      * Parses the string representation of a cell to its corresponding integer 
-     * value.
+     * value. Returns {@code 0} if the cell cannot be parsed.
      * 
      * @param cell The string that should be parsed.
      * @return The integer representation of the cell.
