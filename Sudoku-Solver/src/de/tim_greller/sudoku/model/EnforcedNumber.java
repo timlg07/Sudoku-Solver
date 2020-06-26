@@ -1,5 +1,7 @@
 package de.tim_greller.sudoku.model;
 
+import java.util.Arrays;
+
 public class EnforcedNumber implements Saturator {
     
     /** 
@@ -35,19 +37,31 @@ public class EnforcedNumber implements Saturator {
     private boolean saturateStructure(Board board, Structure struct, int major) 
             throws UnsolvableSudokuException {
         boolean modifiedBoard = false;
-        int[] amountsOfpossibleCells = getAmounts(board, struct, major);
+        int[] amountsOfpossibleCells = computeAmounts(board, struct, major);
         
         for (int minor = 0; minor < board.getNumbers(); minor++) {
+            boolean modifiedCurrentCell = false;
             int[] possibilities = board.getPossibilities(struct, major, minor);
+            
             if (possibilities != null) {
                 for (int possibility : possibilities) {
                     if (amountsOfpossibleCells[possibility - 1] == 1) {
+                        
+                        if (modifiedCurrentCell) {
+                            /*
+                             * Two values in this structure can only be assigned
+                             * to the current cell. As a cell can only hold one
+                             * value, the sudoku is not solvable.
+                             */
+                            throw new UnsolvableSudokuException();
+                        }
+                        
                         try {
                             board.setCell(struct, major, minor, possibility);
                         } catch (InvalidSudokuException e) {
                             throw new UnsolvableSudokuException();
                         }
-                        modifiedBoard = true;
+                        modifiedBoard = modifiedCurrentCell = true;
                     }
                 }
             }
@@ -65,7 +79,7 @@ public class EnforcedNumber implements Saturator {
      * @return The amount of possible cells for each number, starting with the
      *         number 1 at index 0.
      */
-    private int[] getAmounts(Board board, Structure struct, int major) {
+    private int[] computeAmounts(Board board, Structure struct, int major) {
         int[] amounts = new int[board.getNumbers()];
         for (int minor = 0; minor < board.getNumbers(); minor++) {
             int[] possibilities = board.getPossibilities(struct, major, minor);
