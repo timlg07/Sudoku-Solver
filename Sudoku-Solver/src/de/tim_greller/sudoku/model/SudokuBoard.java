@@ -11,7 +11,7 @@ public class SudokuBoard implements Board {
     private int boxRows;
     private int boxCols;
     private BitSet[] board;
-    private final boolean[] isFixed;
+    private boolean[] isFixed;
     private int numbers;
     private int lastCellSetIndex;
     
@@ -62,9 +62,6 @@ public class SudokuBoard implements Board {
                 removePossibility(currentStructure, currentMajor, i, number);
             }
         }
-        // TODO: print statements for quick debugging should be removed.
-        // System.out.println("Set num " + number);
-        // System.out.println(unprettyPrint());
     }
     
     /**
@@ -219,22 +216,22 @@ public class SudokuBoard implements Board {
      */
     @Override
     public Board clone() {
-        Board clone = new SudokuBoard(boxRows, boxCols);
-        Structure struct = Structure.ROW;
-        for (int structNr = 0; structNr < numbers; structNr++) {
-            for (int cellNr = 0; cellNr < numbers; cellNr++) {
-                int value = getCell(struct, structNr, cellNr);
-                if (value != Board.UNSET_CELL) {
-                    try {
-                        clone.setCell(struct, structNr, cellNr, value);
-                    } catch (InvalidSudokuException e) {
-                        // This should not happen.
-                        e.printStackTrace();
-                    }
-                }
-            }
+        SudokuBoard copy;
+        
+        try {
+            copy = (SudokuBoard) super.clone();
+        } catch (Exception e) {
+            throw new AssertionError(e);
         }
-        return clone;
+        
+        // Deep clone arrays.
+        copy.isFixed = isFixed.clone();
+        copy.board = board.clone();
+        for (int i = 0; i < board.length; i++) {
+            copy.board[i] = (BitSet) board[i].clone();
+        }
+        
+        return copy;
     }
 
     /**
