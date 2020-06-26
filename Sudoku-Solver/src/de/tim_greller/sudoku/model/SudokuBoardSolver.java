@@ -61,8 +61,7 @@ public class SudokuBoardSolver implements SudokuSolver {
 
     @Override
     public List<Board> findAllSolutions(Board board) {
-        // TODO Auto-generated method stub
-        return null;
+        return solve(board, true);
     }
     
     /**
@@ -74,18 +73,19 @@ public class SudokuBoardSolver implements SudokuSolver {
         List<Board> candidates = new LinkedList<Board>();
         Structure struct = Structure.ROW; // The coordinate system used here
         
-        int[] minPossibilitiesCell = {0, 0}; // The cell coordinates {row, col}
-        int[] minPossibleValues = board.getPossibilities(struct, 0, 0);
+        int[] minPossibilitiesCell = new int[2]; // The {row, col} coordinates
+        int[] minPossibleValues = new int[board.getNumbers()];
         
         // Find the cell with the minimum amount of possibilities.
-        for (int structNr = 1; structNr < board.getNumbers(); structNr++) {
-            for (int cellNr = 1; cellNr < board.getNumbers(); cellNr++) {
-                int[] currentPossibleValues 
+        for (int structNr = 0; structNr < board.getNumbers(); structNr++) {
+            for (int cellNr = 0; cellNr < board.getNumbers(); cellNr++) {
+                int[] current 
                         = board.getPossibilities(struct, structNr, cellNr);
-                if (currentPossibleValues.length < minPossibleValues.length) {
+                if ((current != null) 
+                        && (current.length < minPossibleValues.length)) {
                     minPossibilitiesCell[0] = structNr;
                     minPossibilitiesCell[1] = cellNr;
-                    minPossibleValues = currentPossibleValues;
+                    minPossibleValues = current;
                 }
             }
         }

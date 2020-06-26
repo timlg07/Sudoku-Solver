@@ -7,6 +7,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import de.tim_greller.sudoku.model.Board;
 import de.tim_greller.sudoku.model.EnforcedCell;
@@ -99,6 +102,20 @@ public final class Shell {
             saturateSudoku();
             break;
             
+        case "first":
+            solveSudoku();
+            break;
+            
+        case "all":
+            printAllSolutions();
+            break;
+            
+        case "print":
+            if (isBoardImported()) {
+                prettyPrint(currentBoard);
+            }
+            break;
+            
         case "quit":
             return false;
             
@@ -110,10 +127,30 @@ public final class Shell {
         return true;
     }
     
+    private static void printAllSolutions() {
+        if (isBoardImported()) {
+            List<Board> solutions = currentSolver.findAllSolutions(currentBoard);
+            Collections.sort(solutions);
+            
+            // Join the string representation of all sudokus.
+            String output = solutions.stream().map(Object::toString)
+                            .collect(Collectors.joining("\n"));
+            
+            System.out.println(output);
+        }
+    }
+
+    private static void solveSudoku() {
+        if (isBoardImported()) {
+            Board solvedBoard = currentSolver.findFirstSolution(currentBoard);
+            prettyPrint(solvedBoard);
+        }
+    }
+    
     private static void saturateSudoku() {
         if (isBoardImported()) {
             Board saturatedBoard = currentSolver.saturate(currentBoard);
-            System.out.println(saturatedBoard.prettyPrint());
+            prettyPrint(saturatedBoard);
         }
     }
     
@@ -145,13 +182,17 @@ public final class Shell {
         if (!(sudokuFile.exists() && sudokuFile.isFile())) {
             printError("The file \"" + sudokuFile.getAbsolutePath() 
                         + "\" was not found.");
+        } else {
+            try {
+                currentBoard = SudokuFileParser.parseToBoard(sudokuFile);
+            } catch (InvalidSudokuException e) {
+                printError("The file contains an invalid sudoku.");
+            }
         }
-        
-        try {
-            currentBoard = SudokuFileParser.parseToBoard(sudokuFile);
-        } catch (InvalidSudokuException e) {
-            printError("The file contains an invalid sudoku.");
-        }
+    }
+    
+    private static void prettyPrint(Board board) {
+        System.out.println(board.prettyPrint());
     }
 
     /**

@@ -85,47 +85,6 @@ public class SudokuBoard implements Board {
         }
     }
     
-    /**
-     * {@inheritDoc} 
-     * Unset cells are represented by a dot. Leading whitespace is added so that
-     * every cells string representation has the same length and the columns are
-     * aligned properly.
-     */
-    @Override
-    public String prettyPrint() {
-        StringBuilder result = new StringBuilder();
-        int maxDigits = (int) (Math.log10(numbers) + 1);
-        
-        for (int i = 0; i < numbers * numbers; i++) {
-            
-            // Create the string representation and format it to equal length.
-            String cell = isFixed[i] ? Integer.toString(getFixedCell(i)) : ".";
-            result.append(String.format("%" + maxDigits + "s", cell));
-
-            // Append the row or coloumn delimiter.
-            if ((i + 1) % numbers == 0) {
-                result.append("\n");
-            } else {
-                result.append(' ');
-            }
-        }
-        return result.toString();
-    }
-    
-    // TODO: Remove.
-    public String unprettyPrint() {
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < numbers * numbers; i++) {
-            result.append(isFixed[i] ? getFixedCell(i) 
-                                     : Arrays.toString(getPossibilities(i)));
-            if ((i + 1) % numbers == 0) {
-                result.append("\n");
-            } else {
-                result.append(' ');
-            }
-        }
-        return result.toString();
-    }
     
     /**
      * {@inheritDoc}
@@ -276,6 +235,59 @@ public class SudokuBoard implements Board {
             }
         }
         return clone;
+    }
+
+    /**
+     * {@inheritDoc} 
+     * Unset cells are represented by a dot. Leading whitespace is added so that
+     * every cells string representation has the same length and the columns are
+     * aligned properly.
+     */
+    @Override
+    public String prettyPrint() {
+        StringBuilder result = new StringBuilder();
+        int maxDigits = (int) (Math.log10(numbers) + 1);
+        
+        for (int i = 0; i < numbers * numbers; i++) {
+            
+            // Create the string representation and format it to equal length.
+            String cell = isFixed[i] ? Integer.toString(getFixedCell(i)) : ".";
+            result.append(String.format("%" + maxDigits + "s", cell));
+
+            // Append the row or coloumn delimiter.
+            if ((i + 1) % numbers == 0) {
+                result.append("\n");
+            } else {
+                result.append(' ');
+            }
+        }
+        return result.toString();
+    }
+    
+    // TODO: Remove.
+    public String unprettyPrint() {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < numbers * numbers; i++) {
+            result.append(isFixed[i] ? getFixedCell(i) 
+                                     : Arrays.toString(getPossibilities(i)));
+            if ((i + 1) % numbers == 0) {
+                result.append("\n");
+            } else {
+                result.append(' ');
+            }
+        }
+        return result.toString();
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < numbers * numbers; i++) {
+            String cell = isFixed[i] ? Integer.toString(getFixedCell(i)) : ".";
+            result.append(cell);
+            result.append(" ");
+        }
+        return result.toString();
     }
 
     /**
