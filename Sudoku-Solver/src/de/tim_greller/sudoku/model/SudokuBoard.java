@@ -225,11 +225,33 @@ public class SudokuBoard implements Board {
     }
     
     /**
-     * not implemented
+     * {@inheritDoc}
+     * Because the boards are read as numbers, if a board contains less numbers
+     * than the other, it is treated as smaller.
      */
     @Override
     public int compareTo(Board other) {
-        // TODO Auto-generated method stub
+        if (numbers > other.getNumbers()) {
+            return 1;
+        } else if (numbers < other.getNumbers()) {
+            return -1;
+        }
+        
+        Structure struct = Structure.ROW;
+        for (int structNr = 0; structNr < numbers; structNr++) {
+            for (int cellNr = 0; cellNr < numbers; cellNr++) {
+                int cellA = getCell(struct, structNr, cellNr);
+                int cellB = other.getCell(struct, structNr, cellNr);
+                if (cellA != cellB) {
+                    if ((cellA == Board.UNSET_CELL) 
+                            || (cellB != Board.UNSET_CELL && cellA > cellB)) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                }
+            }
+        }
         return 0;
     }
     
@@ -241,11 +263,11 @@ public class SudokuBoard implements Board {
         Board clone = new SudokuBoard(boxRows, boxCols);
         Structure struct = Structure.ROW;
         for (int structNr = 0; structNr < numbers; structNr++) {
-            for (int element = 0; element < numbers; element++) {
-                int value = getCell(struct, structNr, element);
+            for (int cellNr = 0; cellNr < numbers; cellNr++) {
+                int value = getCell(struct, structNr, cellNr);
                 if (value != Board.UNSET_CELL) {
                     try {
-                        clone.setCell(struct, structNr, element, value);
+                        clone.setCell(struct, structNr, cellNr, value);
                     } catch (InvalidSudokuException e) {
                         // This should not happen.
                         e.printStackTrace();

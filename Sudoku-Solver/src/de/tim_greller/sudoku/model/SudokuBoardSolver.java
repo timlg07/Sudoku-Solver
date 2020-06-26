@@ -24,7 +24,6 @@ public class SudokuBoardSolver implements SudokuSolver {
     @Override
     public Board saturate(Board board) {
         Board resultingBoard = board.clone();
-        // System.out.println("#################################################");
         try {
             saturateDirect(resultingBoard);
         } catch (UnsolvableSudokuException e) {
