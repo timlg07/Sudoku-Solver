@@ -16,7 +16,8 @@ import de.tim_greller.sudoku.model.SudokuBoardSolver;
 import de.tim_greller.sudoku.model.SudokuSolver;
 
 /**
- * 
+ * The shell class handles the interaction between the user and the data model
+ * using the standard in- and output.
  */
 public final class Shell {
     
@@ -26,7 +27,9 @@ public final class Shell {
     /** 
      * Private constructor to prevent instantiation. 
      */
-    private Shell() { }
+    private Shell() {
+        throw new AssertionError();
+    }
 
     /**
      * The main method processes the input received on System.in (standard 
@@ -91,8 +94,8 @@ public final class Shell {
         String cmd = tokenizedInput[0].toLowerCase();
 
         switch (cmd) {
-        case "import":
-            importSudoku(tokenizedInput);
+        case "input":
+            inputSudoku(tokenizedInput);
             break;
             
         case "saturate":
@@ -108,7 +111,7 @@ public final class Shell {
             break;
             
         case "print":
-            if (isBoardImported()) {
+            if (requireLoadedBoard()) {
                 prettyPrint(currentBoard);
             }
             break;
@@ -124,29 +127,34 @@ public final class Shell {
         return true;
     }
     
+    /**
+     * Prints all possible solutions of the currently loaded board with one
+     * solution per line.
+     */
     private static void printAllSolutions() {
-        if (isBoardImported()) {
-            List<Board> solutions = currentSolver.findAllSolutions(currentBoard);
+        if (requireLoadedBoard()) {
+            List<Board> solutions 
+                = currentSolver.findAllSolutions(currentBoard);
             Collections.sort(solutions);
             
             // Join the string representation of all sudokus.
             String output = solutions.stream()
-                    .map(Object::toString)
-                    .collect(Collectors.joining("\n"));
+                                     .map(Board::toString)
+                                     .collect(Collectors.joining("\n"));
 
             System.out.println(output);
         }
     }
 
     private static void solveSudoku() {
-        if (isBoardImported()) {
+        if (requireLoadedBoard()) {
             Board solvedBoard = currentSolver.findFirstSolution(currentBoard);
             prettyPrint(solvedBoard);
         }
     }
     
     private static void saturateSudoku() {
-        if (isBoardImported()) {
+        if (requireLoadedBoard()) {
             Board saturatedBoard = currentSolver.saturate(currentBoard);
             prettyPrint(saturatedBoard);
         }
@@ -158,16 +166,29 @@ public final class Shell {
         currentSolver.addSaturator(new EnforcedNumber());
     }
     
-    private static boolean isBoardImported() {
+    /**
+     * Checks whether a board is currently loaded or not. If no board is loaded,
+     * an error is printed. 
+     * This should be used for all operations requiring a loaded currentBoard.
+     * 
+     * @return {@code true} if a board is loaded.
+     */
+    private static boolean requireLoadedBoard() {
         if (currentBoard == null) {
-            printError("No sudoku imported.");
+            printError("No sudoku loaded. Please input a sudoku file first.");
             return false;
         } else {
             return true;
         }
     }
 
-    private static void importSudoku(String[] tokenizedInput) {
+    /**
+     * Loads a sudoku board from the file with the filename/path that is given
+     * in the parameter of the input. 
+     * 
+     * @param tokenizedInput The complete tokenized user input.
+     */
+    private static void inputSudoku(String[] tokenizedInput) {
         if (tokenizedInput.length < 2) {
             printError("No filename specified.");
             return;
@@ -177,19 +198,24 @@ public final class Shell {
         String filename = tokenizedInput[1].replaceAll("^\"|\"$", "");  
         
         File sudokuFile = new File(filename);
-        if (!(sudokuFile.exists() && sudokuFile.isFile())) {
-            printError("The file \"" + sudokuFile.getAbsolutePath() 
-                        + "\" was not found.");
-        } else {
+        if (sudokuFile.canRead() && sudokuFile.isFile()) {
             try {
                 currentBoard = SudokuFileParser.parseToBoard(sudokuFile);
             } catch (InvalidSudokuException e) {
                 printError("The file contains an invalid sudoku.");
             }
+        } else {
+            printError("The file \"" + sudokuFile.getAbsolutePath() 
+                       + "\" was not found.");
         }
     }
     
+    /**
+     * Prints the given {@link Board} as a rectangle.
+     * @param board The board that should be printed, not null.
+     */
     private static void prettyPrint(Board board) {
+        assert (board != null);
         System.out.println(board.prettyPrint());
     }
 
