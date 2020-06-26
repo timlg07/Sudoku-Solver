@@ -1,10 +1,10 @@
 package de.tim_greller.sudoku.model;
 
-import java.util.Arrays;
 import java.util.BitSet;
 
 /**
- *
+ * A SudokuBoard represents an intelligent board which is able to store sudokus
+ * with multiple possibilities for unset cells.
  */
 public class SudokuBoard implements Board {
     
@@ -15,6 +15,14 @@ public class SudokuBoard implements Board {
     private int numbers;
     private int lastCellSetIndex;
     
+    /**
+     * Creates a new SudokuBoard with the given box-dimensions. Initially no
+     * cells are fixed and every value between {@code 1} and {@code boxRows
+     * * boxCols} is possible for every cell.
+     * 
+     * @param boxRows The amount of rows per box.
+     * @param boxCols The amount of columns per box.
+     */
     public SudokuBoard(int boxRows, int boxCols) {
         this.boxRows = boxRows;
         this.boxCols = boxCols;
@@ -57,7 +65,7 @@ public class SudokuBoard implements Board {
 
         // Remove the number from all structures containing this cell.
         for (Structure currentStructure : Structure.values()) {
-            int currentMajor = getRelativeIndex(index, currentStructure);
+            int currentMajor = getStructNr(index, currentStructure);
             for (int i = 0; i < numbers; i++) {
                 removePossibility(currentStructure, currentMajor, i, number);
             }
@@ -66,7 +74,7 @@ public class SudokuBoard implements Board {
     
     /**
      * {@inheritDoc}
-     * Does nothing if the cell is already set to fixed value.
+     * Does nothing if the cell is already set to a fixed value.
      */
     @Override
     public void removePossibility(Structure struct, int major, int minor,
@@ -86,7 +94,7 @@ public class SudokuBoard implements Board {
     /**
      * {@inheritDoc}
      * A board is correctly solved if and only if every cells content was set
-     * successfully. 
+     * successfully.
      */
     @Override
     public boolean isSolution() {
@@ -107,10 +115,13 @@ public class SudokuBoard implements Board {
     }
     
     /**
-     * @see SudokuBoard#getPossibilities(Structure, int, int)
+     * Gets all possible values a cell can be assigned to without making the
+     * sudoku invalid.
+     * 
      * @param absoluteIndex the absolute internally used index.
      * @return An array containing the values still possible for a cell, 
      *         or {@code null} if the cell is already set.
+     * @see SudokuBoard#getPossibilities(Structure, int, int)
      */
     private int[] getPossibilities(int absoluteIndex) {
         if (isFixed[absoluteIndex]) {
@@ -121,7 +132,7 @@ public class SudokuBoard implements Board {
         int[] possibilities = new int[cell.cardinality()];
         
         /*
-         * Iterate all possibilities by finding the next possibility bit after 
+         * Traverse all possibilities by finding the next possibility bit after 
          * the last one and store its index.
          * The value represents the fromIndex for the next iteration and the
          * current 1-indexed possibility value that gets stored.
@@ -133,37 +144,7 @@ public class SudokuBoard implements Board {
         
         return possibilities;
     }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNumbers() {
-        return numbers;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int[] getLastCellSet() {
-        return new int[]{
-                lastCellSetIndex / numbers, lastCellSetIndex % numbers};
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getCell(Structure struct, int major, int minor) {
-        int index = calculateIndex(struct, major, minor);
-        if (isFixed[index]) {
-            return getFixedCell(index);
-        } else {
-            return Board.UNSET_CELL;
-        }
-    }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -182,11 +163,42 @@ public class SudokuBoard implements Board {
     
     /**
      * {@inheritDoc}
+     */
+    @Override
+    public int getNumbers() {
+        return numbers;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int[] getLastCellSet() {
+        return new int[] 
+                { lastCellSetIndex / numbers, lastCellSetIndex % numbers };
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getCell(Structure struct, int major, int minor) {
+        int index = calculateIndex(struct, major, minor);
+        if (isFixed[index]) {
+            return getFixedCell(index);
+        } else {
+            return Board.UNSET_CELL;
+        }
+    }
+    
+    /**
+     * {@inheritDoc}
      * Because the boards are read as numbers, if a board contains less numbers
      * than the other, it is treated as smaller.
      */
     @Override
     public int compareTo(Board other) {
+        // Compare the size first.
         if (numbers > other.getNumbers()) {
             return 1;
         } else if (numbers < other.getNumbers()) {
@@ -196,11 +208,11 @@ public class SudokuBoard implements Board {
         Structure struct = Structure.ROW;
         for (int structNr = 0; structNr < numbers; structNr++) {
             for (int cellNr = 0; cellNr < numbers; cellNr++) {
-                int cellA = getCell(struct, structNr, cellNr);
-                int cellB = other.getCell(struct, structNr, cellNr);
-                if (cellA != cellB) {
-                    if ((cellA == Board.UNSET_CELL) 
-                            || (cellB != Board.UNSET_CELL && cellA > cellB)) {
+                int a = getCell(struct, structNr, cellNr);
+                int b = other.getCell(struct, structNr, cellNr);
+                if (a != b) {
+                    if ((a == Board.UNSET_CELL) 
+                            || ((b != Board.UNSET_CELL) && (a > b))) {
                         return 1;
                     } else {
                         return -1;
@@ -224,7 +236,7 @@ public class SudokuBoard implements Board {
             throw new AssertionError(e);
         }
         
-        // Deep clone arrays.
+        // Deep clone for arrays.
         copy.isFixed = isFixed.clone();
         copy.board = board.clone();
         for (int i = 0; i < board.length; i++) {
@@ -251,7 +263,7 @@ public class SudokuBoard implements Board {
             String cell = isFixed[i] ? Integer.toString(getFixedCell(i)) : ".";
             result.append(String.format("%" + maxDigits + "s", cell));
 
-            // Append the row or coloumn delimiter.
+            // Append the row or column delimiter.
             if ((i + 1) % numbers == 0) {
                 result.append("\n");
             } else {
@@ -261,21 +273,9 @@ public class SudokuBoard implements Board {
         return result.toString();
     }
     
-    // TODO: Remove.
-    public String unprettyPrint() {
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < numbers * numbers; i++) {
-            result.append(isFixed[i] ? getFixedCell(i) 
-                                     : Arrays.toString(getPossibilities(i)));
-            if ((i + 1) % numbers == 0) {
-                result.append("\n");
-            } else {
-                result.append(' ');
-            }
-        }
-        return result.toString();
-    }
-    
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
@@ -291,17 +291,17 @@ public class SudokuBoard implements Board {
      * Returns the content of a fixed cell with the given index by returning the 
      * first (and only) possibility of the cell.
      * 
-     * @param index The absolute index of the cell.
+     * @param index The absolute index of the fixed cell.
      * @return The value of the cell.
      */
     private int getFixedCell(int index) {
+        assert isFixed[index];
         return board[index].nextSetBit(0) + 1;
     }
     
     /**
-     * Converts from the given coordinates referring to a specific 
-     * {@link Structure} to the absolute index used internally to store the 
-     * boards data.
+     * Converts from the given coordinates referring to a specific coordinate
+     * type to the absolute index which is used internally to store the sudoku.
      * 
      * @param struct The coordinate type of the cell.
      * @param  major The major coordinate component of the cell.
@@ -311,6 +311,7 @@ public class SudokuBoard implements Board {
     private int calculateIndex(Structure struct, int major, int minor) {
         int x;
         int y;
+        
         switch(struct) {
         case BOX: 
             x = (major % boxRows) * boxCols + minor % boxCols;
@@ -333,21 +334,6 @@ public class SudokuBoard implements Board {
         }
         return y * numbers + x;
     }
-
-    // TODO: remove
-    /*private int getBox(Structure struct, int major, int minor) {
-        switch(struct) {
-        case BOX:
-            return major;
-        case ROW:
-            return (major / boxRows) * boxRows + minor / boxCols;
-        case COL:
-            return (minor / boxRows) * boxRows + major / boxCols;
-        default:
-            throw new IllegalArgumentException(
-                    "Unexpected structure: " + struct);
-        }
-    }//*/
     
     /**
      * Calculates from an absolute index to the major coordinate in a target 
@@ -357,19 +343,19 @@ public class SudokuBoard implements Board {
      * @param target The target coordinate system.
      * @return The major coordinate of the cell.
      */
-    private int getRelativeIndex(int index, Structure target) {
-        int row = index / numbers;
-        int col = index % numbers;
+    private int getStructNr(int index, Structure target) {
+        int x = index / numbers;
+        int y = index % numbers;
         
         switch (target) {
         case BOX:
-            return ((row / boxRows) * boxRows + (col / boxCols));
+            return ((x / boxRows) * boxRows + (y / boxCols));
             
         case ROW:
-            return row;
+            return x;
             
         case COL:
-            return col;
+            return y;
             
         default:
             throw new IllegalArgumentException(

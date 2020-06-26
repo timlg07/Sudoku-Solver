@@ -123,8 +123,8 @@ public interface Board extends Cloneable, Comparable<Board> {
 
     /**
      * Compares two boards according to ascending numbers, which arise if the
-     * boards are red as number by concatenating all rows. An unset digit '.' is
-     * treated to be larger than the highest symbol.
+     * boards are read as number by concatenating all rows. An unset digit '.' 
+     * is treated to be larger than the highest symbol.
      * 
      * @param other The board to compare.
      * @return -1 if this board is smaller, 0 if equal, and 1 if bigger.
