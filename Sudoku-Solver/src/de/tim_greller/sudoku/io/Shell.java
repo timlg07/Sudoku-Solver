@@ -130,9 +130,10 @@ public final class Shell {
             Collections.sort(solutions);
             
             // Join the string representation of all sudokus.
-            String output = solutions.stream().map(Object::toString)
-                            .collect(Collectors.joining("\n"));
-            
+            String output = solutions.stream()
+                    .map(Object::toString)
+                    .collect(Collectors.joining("\n"));
+
             System.out.println(output);
         }
     }
