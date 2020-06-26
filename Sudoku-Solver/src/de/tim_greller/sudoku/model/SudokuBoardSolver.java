@@ -74,7 +74,7 @@ public class SudokuBoardSolver implements SudokuSolver {
         Structure struct = Structure.ROW; // The coordinate system used here
         
         int[] minPossibilitiesCell = new int[2]; // The {row, col} coordinates
-        int[] minPossibleValues = new int[board.getNumbers()];
+        int[] minPossibleValues = new int[board.getNumbers() + 1];
         
         // Find the cell with the minimum amount of possibilities.
         for (int structNr = 0; structNr < board.getNumbers(); structNr++) {
@@ -97,8 +97,7 @@ public class SudokuBoardSolver implements SudokuSolver {
                 candidate.setCell(struct, minPossibilitiesCell[0], 
                         minPossibilitiesCell[1], possibility);
             } catch (InvalidSudokuException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                continue; // Ignore possibilities leading to an invalid sudoku.
             }
             candidates.add(candidate);
         }
@@ -114,15 +113,14 @@ public class SudokuBoardSolver implements SudokuSolver {
     private List<Board> solve(Board board, boolean requestAllSolutions) {
         List<Board> solutions = new LinkedList<Board>();
         Deque<Board> candidates = new LinkedList<Board>();
-        candidates.push(board);
+        candidates.push(board.clone());
         
         while (!candidates.isEmpty()) {
             Board currentBoard = candidates.pop();
             try {
                 saturateDirect(currentBoard);
             } catch (UnsolvableSudokuException e) {
-                // Current board not solvable, try with next one.
-                continue;
+                continue; // Current board not solvable, try with next one.
             }
             
             if (currentBoard.isSolution()) {
