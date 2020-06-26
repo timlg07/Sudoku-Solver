@@ -1,6 +1,8 @@
 package de.tim_greller.sudoku.model;
 
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 
 public class SudokuBoardSolver implements SudokuSolver {
@@ -54,14 +56,86 @@ public class SudokuBoardSolver implements SudokuSolver {
 
     @Override
     public Board findFirstSolution(Board board) {
-        // TODO Auto-generated method stub
-        return null;
+        return solve(board, false).get(0);
     }
 
     @Override
     public List<Board> findAllSolutions(Board board) {
         // TODO Auto-generated method stub
         return null;
+    }
+    
+    /**
+     * 
+     * @param board
+     * @return
+     */
+    private List<Board> getCandidates(Board board) {
+        List<Board> candidates = new LinkedList<Board>();
+        Structure struct = Structure.ROW; // The coordinate system used here
+        
+        int[] minPossibilitiesCell = {0, 0}; // The cell coordinates {row, col}
+        int[] minPossibleValues = board.getPossibilities(struct, 0, 0);
+        
+        // Find the cell with the minimum amount of possibilities.
+        for (int structNr = 1; structNr < board.getNumbers(); structNr++) {
+            for (int cellNr = 1; cellNr < board.getNumbers(); cellNr++) {
+                int[] currentPossibleValues 
+                        = board.getPossibilities(struct, structNr, cellNr);
+                if (currentPossibleValues.length < minPossibleValues.length) {
+                    minPossibilitiesCell[0] = structNr;
+                    minPossibilitiesCell[1] = cellNr;
+                    minPossibleValues = currentPossibleValues;
+                }
+            }
+        }
+        
+        // Create a board for each possibility the found cell can be set to.
+        for (int possibility : minPossibleValues) {
+            Board candidate = board.clone();
+            try {
+                candidate.setCell(struct, minPossibilitiesCell[0], 
+                        minPossibilitiesCell[1], possibility);
+            } catch (InvalidSudokuException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            candidates.add(candidate);
+        }
+        return candidates;
+    }
+    
+    /**
+     * 
+     * @param board
+     * @param requestAllSolutions
+     * @return
+     */
+    private List<Board> solve(Board board, boolean requestAllSolutions) {
+        List<Board> solutions = new LinkedList<Board>();
+        Deque<Board> candidates = new LinkedList<Board>();
+        candidates.push(board);
+        
+        while (!candidates.isEmpty()) {
+            Board currentBoard = candidates.pop();
+            try {
+                saturateDirect(currentBoard);
+            } catch (UnsolvableSudokuException e) {
+                // Current board not solvable, try with next one.
+                continue;
+            }
+            
+            if (currentBoard.isSolution()) {
+                solutions.add(currentBoard);
+                if (!requestAllSolutions) {
+                    return solutions;
+                }
+            } else {
+                candidates.addAll(getCandidates(currentBoard));
+            }
+        }
+        
+        return solutions;
     }
 
 }
