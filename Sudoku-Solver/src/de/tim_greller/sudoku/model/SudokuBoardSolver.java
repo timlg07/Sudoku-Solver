@@ -5,10 +5,14 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * A SudokuBoardSolver uses the registered saturators and backtracking to solve
+ * a sudoku.
+ */
 public class SudokuBoardSolver implements SudokuSolver {
 
     /**
-     * A list of all registered solution strategies.
+     * The list of all registered solution strategies.
      */
     private List<Saturator> saturators = new ArrayList<Saturator>();
 
@@ -38,7 +42,7 @@ public class SudokuBoardSolver implements SudokuSolver {
      * Changes the given board by applying all registered saturators 
      * repeatedly on it as long as at least one of the saturators modifies it.
      * 
-     * @param board The board that gets modified by the saturators.
+     * @param board The board that is directly modified by the saturators.
      * @throws UnsolvableSudokuException The given board is not solvable.
      */
     private void saturateDirect(Board board) throws UnsolvableSudokuException {
@@ -54,26 +58,38 @@ public class SudokuBoardSolver implements SudokuSolver {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Board findFirstSolution(Board board) {
         return solve(board, false).get(0);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<Board> findAllSolutions(Board board) {
         return solve(board, true);
     }
     
     /**
+     * Generates all boards where one of the possible values is successfully
+     * assigned to the cell with the minimum amount of possibilities. 
+     * These boards can be used as candidates for further backtracking steps.
      * 
-     * @param board
-     * @return
+     * @param board The board all other candidates are based on. Will not be
+     *        changed.
+     * @return A list of all candidates, each one with a different value 
+     *         assigned to the cell with the minimum amount of possibilities.
      */
-    private List<Board> getCandidates(Board board) {
+    private List<Board> generateCandidates(Board board) {
         List<Board> candidates = new LinkedList<Board>();
-        Structure struct = Structure.ROW; // The coordinate system used here
+        Structure struct = Structure.ROW; // The coordinate system used here.
         
-        int[] minPossibilitiesCell = new int[2]; // The {row, col} coordinates
+        int row = 0;
+        int col = 0;
         int[] minPossibleValues = new int[board.getNumbers() + 1];
         
         // Find the cell with the minimum amount of possibilities.
@@ -83,8 +99,8 @@ public class SudokuBoardSolver implements SudokuSolver {
                         = board.getPossibilities(struct, structNr, cellNr);
                 if ((current != null) 
                         && (current.length < minPossibleValues.length)) {
-                    minPossibilitiesCell[0] = structNr;
-                    minPossibilitiesCell[1] = cellNr;
+                    row = structNr;
+                    col = cellNr;
                     minPossibleValues = current;
                 }
             }
@@ -94,8 +110,7 @@ public class SudokuBoardSolver implements SudokuSolver {
         for (int possibility : minPossibleValues) {
             Board candidate = board.clone();
             try {
-                candidate.setCell(struct, minPossibilitiesCell[0], 
-                        minPossibilitiesCell[1], possibility);
+                candidate.setCell(struct, row, col, possibility);
             } catch (InvalidSudokuException e) {
                 continue; // Ignore possibilities leading to an invalid sudoku.
             }
@@ -105,10 +120,13 @@ public class SudokuBoardSolver implements SudokuSolver {
     }
     
     /**
+     * Tries to solve a given sudoku using backtracking. The saturators are used
+     * to speed up the process of sorting out wrong boards.
      * 
-     * @param board
-     * @param requestAllSolutions
-     * @return
+     * @param board The sudoku that should be solved. Will not be changed.
+     * @param requestAllSolutions Whether all solutions are needed or one is
+     *        sufficient.
+     * @return A List containing one or, if requested, all solutions of board.
      */
     private List<Board> solve(Board board, boolean requestAllSolutions) {
         List<Board> solutions = new LinkedList<Board>();
@@ -129,7 +147,7 @@ public class SudokuBoardSolver implements SudokuSolver {
                     return solutions;
                 }
             } else {
-                candidates.addAll(getCandidates(currentBoard));
+                candidates.addAll(generateCandidates(currentBoard));
             }
         }
         
