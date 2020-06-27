@@ -1,7 +1,5 @@
 package de.tim_greller.sudoku.model;
 
-import java.util.Arrays;
-
 public class EnforcedNumber implements Saturator {
     
     /** 
@@ -61,7 +59,9 @@ public class EnforcedNumber implements Saturator {
                         } catch (InvalidSudokuException e) {
                             throw new UnsolvableSudokuException();
                         }
-                        modifiedBoard = modifiedCurrentCell = true;
+                        
+                        modifiedCurrentCell = true;
+                        modifiedBoard = true;
                     }
                 }
             }
@@ -71,12 +71,14 @@ public class EnforcedNumber implements Saturator {
     }
     
     /**
-     * Returns the amount of possible cells a number can be placed at.
+     * Computes the amount of possible cells a number can be placed at in the
+     * specified structure.
      * 
      * @param board The board providing the possibilities of each cell.
-     * @param struct The type of the structure that is currently traversed.
-     * @param major The number of the structure that is currently traversed.
-     * @return The amount of possible cells for each number, starting with the
+     * @param struct The type of the structure.
+     * @param major The number of the structure.
+     * @return For each number the array contains the amount of cells in the
+     *         structure this number can be assigned to, starting with the
      *         number 1 at index 0.
      */
     private int[] computeAmounts(Board board, Structure struct, int major) {

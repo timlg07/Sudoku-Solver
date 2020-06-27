@@ -17,6 +17,7 @@ public class EnforcedCell implements Saturator {
                 int[] possibilities = board.getPossibilities(
                         struct, major, minor);
                 if ((possibilities != null) && (possibilities.length == 1)) {
+                    // Cell is unset and can be set to exactly one value.
                     try {
                         board.setCell(struct, major, minor, possibilities[0]);
                     } catch (InvalidSudokuException e) {
