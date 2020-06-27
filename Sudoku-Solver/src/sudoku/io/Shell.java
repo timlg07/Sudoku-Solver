@@ -53,11 +53,11 @@ public final class Shell {
     }
 
     /**
-     * Reads the next input line and initiates the execution of it.
-     * Returns {@code false} if EOF is reached.
-     * Performs no operation for blank lines.
+     * Interprets the given line of user input and initiates the execution of
+     * it. Returns {@code false} if EOF is reached and Performs no operation for
+     * blank lines.
      * 
-     * @param stdin The BufferedReader for the standard input stream.
+     * @param line The line that should be processed.
      * @return whether the program should continue execution or terminate after 
      *         the current line of input is processed.
      */
@@ -99,15 +99,19 @@ public final class Shell {
             break;
             
         case "saturate":
-            saturateSudoku();
+            printSaturatedSudoku();
             break;
             
         case "first":
-            solveSudoku();
+            printSolvedSudoku();
             break;
             
         case "all":
             printAllSolutions();
+            break;
+            
+        case "help":
+            printHelpText();
             break;
             
         case "print":
@@ -126,7 +130,7 @@ public final class Shell {
         
         return true;
     }
-    
+
     /**
      * Prints all possible solutions of the currently loaded board with one
      * solution per line.
@@ -146,20 +150,31 @@ public final class Shell {
         }
     }
 
-    private static void solveSudoku() {
+    /**
+     * Prints the first found solution using pretty print.
+     */
+    private static void printSolvedSudoku() {
         if (requireLoadedBoard()) {
             Board solvedBoard = currentSolver.findFirstSolution(currentBoard);
             prettyPrint(solvedBoard);
         }
     }
     
-    private static void saturateSudoku() {
+    /**
+     * Pretty prints the the sudoku after all registered saturator strategies
+     * were applied.
+     */
+    private static void printSaturatedSudoku() {
         if (requireLoadedBoard()) {
             Board saturatedBoard = currentSolver.saturate(currentBoard);
             prettyPrint(saturatedBoard);
         }
     }
     
+    /**
+     * Instantiates a new Solver and registers the {@link EnforcedCell} and
+     * {@link EnforcedNumber} saturators on it.
+     */
     private static void setupSolver() {
         currentSolver = new SudokuBoardSolver();
         currentSolver.addSaturator(new EnforcedCell());
@@ -217,6 +232,45 @@ public final class Shell {
     private static void prettyPrint(Board board) {
         assert (board != null);
         System.out.println(board.prettyPrint());
+    }
+    
+    /**
+     * Prints the help text containing informations about the existing commands
+     * and their syntax.
+     */
+    private static void printHelpText() {
+        System.out.println(
+                  "The sudoku shell is capable of solving every sudoku you "
+                + "load. You are not limited to standard 9 by 9 sudokus, but "
+                + "can load and solve sudokus of all sizes.\n\n"
+                + "Available commands:\n"
+                
+                + "input [[<drive>:][<path>]<filename>    Loads a sudoku from a"
+                + " sudoku file (*.sud) with the given absolute or relative "
+                + "path. Paths or filenames with spaces must be put in double "
+                + "quotes. The sudoku file has to specify the size of boxes in "
+                + "the sudoku, which is done by writing the amount of rows and "
+                + "columns in the first line, separated with a space. The "
+                + "following lines should contain one row of the sudoku per "
+                + "line as a space separated list of its cells. Empty cells are"
+                + " indicated as dots.\n"
+                
+                + "first    Computes and prints the first found solution of the"
+                + " sudoku.\n"
+                
+                + "all      Generates all possible sudokus and prints them "
+                + "(one sudoku per line) in ascending order.\n"
+                
+                + "saturate Prints the sudoku with all strategies applied. "
+                + "Since this will not do any backtracking, the provided sudoku"
+                + " can, but does not have to be fully solved.\n"
+                
+                + "print    Prints the currently loaded sudoku.\n"
+                
+                + "help     Shows this help text.\n"
+                
+                + "quit     Exits the program.\n"
+        );
     }
 
     /**

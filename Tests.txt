@@ -1,5 +1,44 @@
+sudoku> help
+The sudoku shell is capable of solving every sudoku you load. You are not \
+limited to standard 9 by 9 sudokus, but can load and solve sudokus of all sizes.
+
+Available commands:
+input [[<drive>:][<path>]<filename>    Loads a sudoku from a sudoku file \
+(*.sud) with the given absolute or relative path. Paths or filenames with \
+spaces must be put in double quotes. The sudoku file has to specify the size \
+of boxes in the sudoku, which is done by writing the amount of rows and \
+columns in the first line, separated with a space. The following lines should \
+contain one row of the sudoku per line as a space separated list of its cells. \
+Empty cells are indicated as dots.
+first    Computes and prints the first found solution of the sudoku.
+all      Generates all possible sudokus and prints them (one sudoku per line) \
+in ascending order.
+saturate Prints the sudoku with all strategies applied. Since this will not do \
+any backtracking, the provided sudoku can, but does not have to be fully solved.
+print    Prints the currently loaded sudoku.
+help     Shows this help text.
+quit     Exits the program.
+
 sudoku> input sudokus\empty.sud
 Parse error! The file is empty.
+sudoku> input sudokus\smol.sud
+sudoku> print
+.
+sudoku> first
+1
+sudoku> all
+1
+sudoku> saturate
+1
+sudoku> input sudokus\no.sud
+sudoku> print
+
+sudoku> saturate
+
+sudoku> first
+
+sudoku> all
+
 sudoku> input sudokus\digitTest.sud
 sudoku> print
  1  .  .  .  .  .  .  .  .  .  .  .
@@ -14,6 +53,8 @@ sudoku> print
  .  .  .  .  .  .  .  .  .  .  .  .
  .  .  .  .  .  .  .  .  .  .  .  .
  .  .  .  .  .  .  .  .  .  . 10  5
+sudoku> input sudokus\impossible.sud
+Error! The file contains an invalid sudoku.
 sudoku> input sudokus\blank.sud
 sudoku> print
 . . . .
