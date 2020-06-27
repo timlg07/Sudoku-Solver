@@ -114,7 +114,7 @@ public final class SudokuFileParser {
         
         for (int i = 0; i < row.length; i++) {
             int cellValue = parseCellValue(row[i]);
-            if (cellValue > 0 && cellValue <= board.getNumbers()) {
+            if ((cellValue > 0) && (cellValue <= board.getNumbers())) {
                 board.setCell(Structure.ROW, rowIndex, i, cellValue);
             } else if (cellValue != Board.UNSET_CELL) {
                 printParseError("Invalid Board data.");
