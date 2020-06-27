@@ -264,43 +264,55 @@ public class SudokuBoard implements Board {
      */
     @Override
     public String prettyPrint() {
+        return printHelper(" ", "\n");
+    }
+    
+    /**
+     * {@inheritDoc}
+     * Unset cells are represented by a dot. Leading whitespace is added so that
+     * every cells string representation has the same length and different
+     * sudokus can be compared better.
+     */
+    @Override
+    public String toString() {
+        return printHelper(" ", " ");
+    }
+    
+    /**
+     * Returns a string representation of the sudoku. This method concatenates
+     * the string representation of each cell in a row with the column separator
+     * and each row with the row separator. A cell is represented by its value
+     * if it is set, and by a dot if not.
+     * 
+     * @param colSeperator The delimiter between each column.
+     * @param rowSeperator The delimiter between each row.
+     * @return The string representation.
+     */
+    private String printHelper(String colSeparator, String rowSeperator) {
         StringBuilder result = new StringBuilder();
         int maxDigits = (int) (Math.log10(numbers) + 1);
+        int lastIndex = (numbers * numbers) - 1;
         
-        for (int i = 0; i < numbers * numbers; i++) {
+        for (int i = 0; i <= lastIndex; i++) {
             
             // Create the string representation and format it to equal length.
             String cell = isFixed[i] ? Integer.toString(getFixedCell(i)) : ".";
             result.append(String.format("%" + maxDigits + "s", cell));
 
-            // Append the row or column delimiter.
-            if ((i + 1) % numbers == 0) {
-                result.append("\n");
-            } else {
-                result.append(' ');
+            // If necessary, append the row or column delimiter.
+            if (i < lastIndex) {
+                if ((i + 1) % numbers == 0) {
+                    result.append(rowSeperator);
+                } else {
+                    result.append(colSeparator);
+                }
             }
         }
         return result.toString();
     }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        StringBuilder result = new StringBuilder();
-        
-        for (int i = 0; i < numbers * numbers; i++) {
-            String cell = isFixed[i] ? Integer.toString(getFixedCell(i)) : ".";
-            result.append(cell);
-            result.append(" ");
-        }
-        
-        return result.toString();
-    }
 
     /**
-     * Returns the content of a fixed cell with the given index by returning the 
+     * Returns the content of a fixed cell with the given index by returning the
      * first (and only) possibility of the cell.
      * 
      * @param index The absolute index of the fixed cell.
