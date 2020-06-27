@@ -51,10 +51,12 @@ public class SudokuBoardSolver implements SudokuSolver {
         boolean saturated = false;
         
         while (!saturated) {
-            saturated = true; // Assume that no further changes are needed.
+            saturated = true; // Assume that no further changes can be done.
+            
             for (Saturator saturator : saturators) {
                 if (saturator.saturate(board)) {
-                    // The saturators must be applied to the changed board.
+                    
+                    // The saturators must also be applied to the changed board.
                     saturated = false;
                 }
             }
