@@ -332,7 +332,7 @@ public class SudokuBoard implements Board {
             throw new IllegalArgumentException(
                     "Unexpected structure: " + struct);
         }
-        return y * numbers + x;
+        return (y * numbers + x);
     }
     
     /**
