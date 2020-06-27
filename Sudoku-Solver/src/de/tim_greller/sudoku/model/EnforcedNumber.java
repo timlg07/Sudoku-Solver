@@ -1,10 +1,14 @@
 package de.tim_greller.sudoku.model;
 
+/**
+ * A solution strategy that sets all cells of a sudoku which have to contain a
+ * value because no other cell in the structure can be set to it.
+ */
 public class EnforcedNumber implements Saturator {
     
     /** 
      * {@inheritDoc}
-     * <p>This strategy traverses all cells of all structures and sets the 
+     * <p>This strategy traverses all cells of each structure and sets the 
      * values that have only one possible cell they could be placed at.</p>
      */
     @Override

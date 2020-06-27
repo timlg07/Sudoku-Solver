@@ -1,5 +1,9 @@
 package de.tim_greller.sudoku.model;
 
+/**
+ * A solution strategy that sets all cells of a sudoku that can only contain one
+ * value.
+ */
 public class EnforcedCell implements Saturator {
 
     /** 
