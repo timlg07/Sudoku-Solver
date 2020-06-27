@@ -30,11 +30,13 @@ public class SudokuBoardSolver implements SudokuSolver {
     @Override
     public Board saturate(Board board) {
         Board resultingBoard = board.clone();
+        
         try {
             saturateDirect(resultingBoard);
         } catch (UnsolvableSudokuException e) {
             return null;
         }
+        
         return resultingBoard;
     }
     
@@ -47,6 +49,7 @@ public class SudokuBoardSolver implements SudokuSolver {
      */
     private void saturateDirect(Board board) throws UnsolvableSudokuException {
         boolean saturated = false;
+        
         while (!saturated) {
             saturated = true; // Assume that no further changes are needed.
             for (Saturator saturator : saturators) {
@@ -117,6 +120,7 @@ public class SudokuBoardSolver implements SudokuSolver {
             }
             candidates.add(candidate);
         }
+        
         return candidates;
     }
     

@@ -83,6 +83,7 @@ public class EnforcedNumber implements Saturator {
      */
     private int[] computeAmounts(Board board, Structure struct, int major) {
         int[] amounts = new int[board.getNumbers()];
+        
         for (int minor = 0; minor < board.getNumbers(); minor++) {
             int[] possibilities = board.getPossibilities(struct, major, minor);
             if (possibilities != null) {
@@ -91,6 +92,7 @@ public class EnforcedNumber implements Saturator {
                 }
             }
         }
+        
         return amounts;
     }
 

@@ -86,6 +86,7 @@ public class SudokuBoard implements Board {
     public void removePossibility(Structure struct, int major, int minor,
             int number) throws InvalidSudokuException {
         int index = calculateIndex(struct, major, minor);
+        
         if (!isFixed[index]) {
             board[index].clear(number - 1);
 
@@ -180,8 +181,9 @@ public class SudokuBoard implements Board {
      */
     @Override
     public int[] getLastCellSet() {
-        return new int[] 
-                { lastCellSetIndex / numbers, lastCellSetIndex % numbers };
+        return new int[] { 
+                getStructNr(lastCellSetIndex, Structure.ROW), 
+                getStructNr(lastCellSetIndex, Structure.COL) };
     }
     
     /**
@@ -190,6 +192,7 @@ public class SudokuBoard implements Board {
     @Override
     public int getCell(Structure struct, int major, int minor) {
         int index = calculateIndex(struct, major, minor);
+        
         if (isFixed[index]) {
             return getFixedCell(index);
         } else {
@@ -204,6 +207,7 @@ public class SudokuBoard implements Board {
      */
     @Override
     public int compareTo(Board other) {
+        
         // Compare the size first.
         if (numbers > other.getNumbers()) {
             return 1;
@@ -285,11 +289,13 @@ public class SudokuBoard implements Board {
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
+        
         for (int i = 0; i < numbers * numbers; i++) {
             String cell = isFixed[i] ? Integer.toString(getFixedCell(i)) : ".";
             result.append(cell);
             result.append(" ");
         }
+        
         return result.toString();
     }
 
