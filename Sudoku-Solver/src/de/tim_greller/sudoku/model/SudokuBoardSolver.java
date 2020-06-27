@@ -76,7 +76,7 @@ public class SudokuBoardSolver implements SudokuSolver {
     
     /**
      * Generates all boards where one of the possible values is successfully
-     * assigned to the cell with the minimum amount of possibilities. 
+     * assigned to the cell with the lowest amount of possible values. 
      * These boards can be used as candidates for further backtracking steps.
      * 
      * @param board The board all other candidates are based on. Will not be
@@ -88,29 +88,30 @@ public class SudokuBoardSolver implements SudokuSolver {
         List<Board> candidates = new LinkedList<Board>();
         Structure struct = Structure.ROW; // The coordinate system used here.
         
-        int row = 0;
-        int col = 0;
-        int[] minPossibleValues = new int[board.getNumbers() + 1];
+        // Information about the cell with the lowest amount of possible values.
+        int minPossRow = 0;
+        int minPossCol = 0;
+        int[] minPossValues = new int[board.getNumbers() + 1];
         
         // Find the cell with the minimum amount of possibilities.
         for (int structNr = 0; structNr < board.getNumbers(); structNr++) {
             for (int cellNr = 0; cellNr < board.getNumbers(); cellNr++) {
                 int[] current 
                         = board.getPossibilities(struct, structNr, cellNr);
-                if ((current != null) 
-                        && (current.length < minPossibleValues.length)) {
-                    row = structNr;
-                    col = cellNr;
-                    minPossibleValues = current;
+                if ((current != null)
+                        && (current.length < minPossValues.length)) {
+                    minPossRow = structNr;
+                    minPossCol = cellNr;
+                    minPossValues = current;
                 }
             }
         }
         
         // Create a board for each possibility the found cell can be set to.
-        for (int possibility : minPossibleValues) {
+        for (int possibility : minPossValues) {
             Board candidate = board.clone();
             try {
-                candidate.setCell(struct, row, col, possibility);
+                candidate.setCell(struct, minPossRow, minPossCol, possibility);
             } catch (InvalidSudokuException e) {
                 continue; // Ignore possibilities leading to an invalid sudoku.
             }
