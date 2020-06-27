@@ -181,7 +181,7 @@ public class SudokuBoard implements Board {
      */
     @Override
     public int[] getLastCellSet() {
-        return new int[] { 
+        return new int[] {
                 getStructNr(lastCellSetIndex, Structure.ROW), 
                 getStructNr(lastCellSetIndex, Structure.COL) };
     }
@@ -242,7 +242,7 @@ public class SudokuBoard implements Board {
         
         try {
             copy = (SudokuBoard) super.clone();
-        } catch (Exception e) {
+        } catch (CloneNotSupportedException e) {
             throw new AssertionError(e);
         }
         
@@ -257,7 +257,7 @@ public class SudokuBoard implements Board {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      * Unset cells are represented by a dot. Leading whitespace is added so that
      * every cells string representation has the same length and the columns are
      * aligned properly.
