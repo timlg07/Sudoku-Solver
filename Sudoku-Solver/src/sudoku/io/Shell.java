@@ -139,10 +139,10 @@ public final class Shell {
         if (requireLoadedBoard()) {
             List<Board> solutions 
                 = currentSolver.findAllSolutions(currentBoard);
-            Collections.sort(solutions);
             
-            // Join the string representation of all sudokus.
+            // Sort all sudokus and join their string representation.
             String output = solutions.stream()
+                                     .sorted()
                                      .map(Board::toString)
                                      .collect(Collectors.joining("\n"));
 
