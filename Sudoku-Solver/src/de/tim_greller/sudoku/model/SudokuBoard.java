@@ -49,17 +49,23 @@ public class SudokuBoard implements Board {
     public void setCell(Structure struct, int major, int minor, int number) 
             throws InvalidSudokuException {
         int index = calculateIndex(struct, major, minor);
+        
         if (isFixed[index]) {
             throw new IllegalStateException("This cell is already fixed.");
         } else if (number == Board.UNSET_CELL) {
             return;
+        } else if ((number < 1) || (number > numbers)) {
+            throw new IllegalArgumentException(
+                    "This sudoku only allows numbers between 1 and " + numbers);
         } else if (!board[index].get(number - 1)) {
             throw new InvalidSudokuException(
                     "This cell cannot be set to " + number);
         }
         
-        board[index].clear(0, numbers);
-        board[index].set(number - 1);
+        // Clear all bits except the set bit at (number - 1).
+        board[index].clear(0, number - 1);
+        board[index].clear(number, numbers);
+        
         isFixed[index] = true;
         lastCellSetIndex = index;
 
