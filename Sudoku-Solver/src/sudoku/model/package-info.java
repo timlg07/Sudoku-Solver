@@ -3,4 +3,4 @@
  * can be used to store and solve sudokus. To enable simple communication with
  * this model, it contains custom exception- and enumeration-classes.
  */
-package de.tim_greller.sudoku.model;
+package sudoku.model;

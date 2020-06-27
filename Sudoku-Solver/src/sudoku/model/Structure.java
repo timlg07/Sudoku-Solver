@@ -1,4 +1,4 @@
-package de.tim_greller.sudoku.model;
+package sudoku.model;
 
 /**
  * The different types of structures/coordinate systems.

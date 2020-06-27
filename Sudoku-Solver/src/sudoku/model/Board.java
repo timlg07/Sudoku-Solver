@@ -1,4 +1,4 @@
-package de.tim_greller.sudoku.model;
+package sudoku.model;
 
 /**
  * An interface for the representation and for solving of Sudokus, which

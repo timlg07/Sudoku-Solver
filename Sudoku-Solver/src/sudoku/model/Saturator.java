@@ -1,4 +1,4 @@
-package de.tim_greller.sudoku.model;
+package sudoku.model;
 
 /**
  * An interface which must be implemented by classes which provide a solution

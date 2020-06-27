@@ -1,4 +1,4 @@
-package de.tim_greller.sudoku.io;
+package sudoku.io;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,12 +8,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.tim_greller.sudoku.model.Board;
-import de.tim_greller.sudoku.model.EnforcedCell;
-import de.tim_greller.sudoku.model.EnforcedNumber;
-import de.tim_greller.sudoku.model.InvalidSudokuException;
-import de.tim_greller.sudoku.model.SudokuBoardSolver;
-import de.tim_greller.sudoku.model.SudokuSolver;
+import sudoku.model.Board;
+import sudoku.model.EnforcedCell;
+import sudoku.model.EnforcedNumber;
+import sudoku.model.InvalidSudokuException;
+import sudoku.model.SudokuBoardSolver;
+import sudoku.model.SudokuSolver;
 
 /**
  * The shell class handles the interaction between the user and the data model
