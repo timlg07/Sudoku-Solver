@@ -1,4 +1,4 @@
-package de.tim_greller.sudoku.model;
+package sudoku.model;
 
 /**
  * Exception if one likes to set a number which is not possible.

@@ -1,4 +1,4 @@
-package de.tim_greller.sudoku.model;
+package sudoku.model;
 
 /**
  * A solution strategy that sets all cells of a sudoku that can only contain one

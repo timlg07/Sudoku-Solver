@@ -1,4 +1,4 @@
-package de.tim_greller.sudoku.model;
+package sudoku.model;
 
 /**
  * A solution strategy that sets all cells of a sudoku which have to contain a
@@ -39,7 +39,7 @@ public class EnforcedNumber implements Saturator {
     private boolean saturateStructure(Board board, Structure struct, int major) 
             throws UnsolvableSudokuException {
         boolean modifiedBoard = false;
-        int[] amountsOfpossibleCells = computeAmounts(board, struct, major);
+        int[] amountsOfPossibleCells = computeAmounts(board, struct, major);
         
         for (int minor = 0; minor < board.getNumbers(); minor++) {
             boolean modifiedCurrentCell = false;
@@ -47,8 +47,8 @@ public class EnforcedNumber implements Saturator {
             
             if (possibilities != null) {
                 for (int possibility : possibilities) {
-                    if (amountsOfpossibleCells[possibility - 1] == 1) {
-                        
+
+                    if (amountsOfPossibleCells[possibility - 1] == 1) {
                         if (modifiedCurrentCell) {
                             /*
                              * Two values in this structure can only be assigned
@@ -63,7 +63,7 @@ public class EnforcedNumber implements Saturator {
                         } catch (InvalidSudokuException e) {
                             throw new UnsolvableSudokuException();
                         }
-                        
+
                         modifiedCurrentCell = true;
                         modifiedBoard = true;
                     }

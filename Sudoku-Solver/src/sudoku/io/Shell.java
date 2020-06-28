@@ -1,19 +1,18 @@
-package de.tim_greller.sudoku.io;
+package sudoku.io;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.tim_greller.sudoku.model.Board;
-import de.tim_greller.sudoku.model.EnforcedCell;
-import de.tim_greller.sudoku.model.EnforcedNumber;
-import de.tim_greller.sudoku.model.InvalidSudokuException;
-import de.tim_greller.sudoku.model.SudokuBoardSolver;
-import de.tim_greller.sudoku.model.SudokuSolver;
+import sudoku.model.Board;
+import sudoku.model.EnforcedCell;
+import sudoku.model.EnforcedNumber;
+import sudoku.model.InvalidSudokuException;
+import sudoku.model.SudokuBoardSolver;
+import sudoku.model.SudokuSolver;
 
 /**
  * The shell class handles the interaction between the user and the data model
@@ -53,11 +52,11 @@ public final class Shell {
     }
 
     /**
-     * Reads the next input line and initiates the execution of it.
-     * Returns {@code false} if EOF is reached.
-     * Performs no operation for blank lines.
+     * Interprets the given line of user input and initiates the execution of
+     * it. Returns {@code false} if EOF is reached and Performs no operation for
+     * blank lines.
      * 
-     * @param stdin The BufferedReader for the standard input stream.
+     * @param line The line that should be processed.
      * @return whether the program should continue execution or terminate after 
      *         the current line of input is processed.
      */
@@ -99,20 +98,24 @@ public final class Shell {
             break;
             
         case "saturate":
-            saturateSudoku();
+            printSaturatedSudoku();
             break;
             
         case "first":
-            solveSudoku();
+            printSolvedSudoku();
             break;
             
         case "all":
             printAllSolutions();
             break;
             
+        case "help":
+            printHelpText();
+            break;
+            
         case "print":
             if (requireLoadedBoard()) {
-                prettyPrint(currentBoard);
+                System.out.println(currentBoard.prettyPrint());
             }
             break;
             
@@ -126,7 +129,7 @@ public final class Shell {
         
         return true;
     }
-    
+
     /**
      * Prints all possible solutions of the currently loaded board with one
      * solution per line.
@@ -135,31 +138,47 @@ public final class Shell {
         if (requireLoadedBoard()) {
             List<Board> solutions 
                 = currentSolver.findAllSolutions(currentBoard);
-            Collections.sort(solutions);
             
-            // Join the string representation of all sudokus.
-            String output = solutions.stream()
-                                     .map(Board::toString)
-                                     .collect(Collectors.joining("\n"));
-
-            System.out.println(output);
+            if (solutions.size() == 0) {
+                printError("This board is unsolvable");
+            } else {
+            
+                // Sort all sudokus and join their string representation.
+                String output = solutions.stream()
+                                         .sorted()
+                                         .map(Board::toString)
+                                         .collect(Collectors.joining("\n"));
+                
+                System.out.println(output);
+            }
         }
     }
 
-    private static void solveSudoku() {
+    /**
+     * Prints the first found solution using pretty print.
+     */
+    private static void printSolvedSudoku() {
         if (requireLoadedBoard()) {
             Board solvedBoard = currentSolver.findFirstSolution(currentBoard);
-            prettyPrint(solvedBoard);
+            prettyPrintSolved(solvedBoard);
         }
     }
     
-    private static void saturateSudoku() {
+    /**
+     * Pretty prints the the sudoku after all registered saturator strategies
+     * were applied.
+     */
+    private static void printSaturatedSudoku() {
         if (requireLoadedBoard()) {
             Board saturatedBoard = currentSolver.saturate(currentBoard);
-            prettyPrint(saturatedBoard);
+            prettyPrintSolved(saturatedBoard);
         }
     }
     
+    /**
+     * Instantiates a new Solver and registers the {@link EnforcedCell} and
+     * {@link EnforcedNumber} saturators on it.
+     */
     private static void setupSolver() {
         currentSolver = new SudokuBoardSolver();
         currentSolver.addSaturator(new EnforcedCell());
@@ -211,12 +230,57 @@ public final class Shell {
     }
     
     /**
-     * Prints the given {@link Board} as a rectangle.
-     * @param board The board that should be printed, not null.
+     * Prints the given {@link Board} as a rectangle. If the board is 
+     * {@code null} an error indicating that the board is unsolvable is printed.
+     * 
+     * @param board The solved board that should be printed, may be null.
      */
-    private static void prettyPrint(Board board) {
-        assert (board != null);
-        System.out.println(board.prettyPrint());
+    private static void prettyPrintSolved(Board board) {
+        if (board == null) {
+            printError("This board is unsolvable");
+        } else {
+            System.out.println(board.prettyPrint());
+        }
+    }
+    
+    /**
+     * Prints the help text containing informations about the existing commands
+     * and their syntax.
+     */
+    private static void printHelpText() {
+        System.out.println(
+                  "The sudoku shell is capable of solving every sudoku you "
+                + "load. You are not limited to standard 9 by 9 sudokus, but "
+                + "can load and solve sudokus of all sizes.\n\n"
+                + "Available commands:\n"
+                
+                + "input [[<drive>:][<path>]<filename>    Loads a sudoku from a"
+                + " sudoku file (*.sud) with the given absolute or relative "
+                + "path. Paths or filenames with spaces must be put in double "
+                + "quotes. The sudoku file has to specify the size of boxes in "
+                + "the sudoku, which is done by writing the amount of rows and "
+                + "columns in the first line, separated with a space. The "
+                + "following lines should contain one row of the sudoku per "
+                + "line as a space separated list of its cells. Empty cells are"
+                + " indicated as dots.\n"
+                
+                + "first    Computes and prints the first found solution of the"
+                + " sudoku if it is solvable.\n"
+                
+                + "all      Generates all possible sudokus and prints them "
+                + "(one sudoku per line) in ascending order.\n"
+                
+                + "saturate Prints the sudoku with all strategies applied if "
+                + "they do not lead to an unsolvable sudoku. Since this will "
+                + "not do any backtracking, the provided sudoku can, but does "
+                + "not have to be fully solved.\n"
+                
+                + "print    Prints the currently loaded sudoku.\n"
+                
+                + "help     Shows this help text.\n"
+                
+                + "quit     Exits the program.\n"
+        );
     }
 
     /**

@@ -1,4 +1,4 @@
-package de.tim_greller.sudoku.io;
+package sudoku.io;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -6,10 +6,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Optional;
 
-import de.tim_greller.sudoku.model.Board;
-import de.tim_greller.sudoku.model.InvalidSudokuException;
-import de.tim_greller.sudoku.model.Structure;
-import de.tim_greller.sudoku.model.SudokuBoard;
+import sudoku.model.Board;
+import sudoku.model.InvalidSudokuException;
+import sudoku.model.Structure;
+import sudoku.model.SudokuBoard;
 
 /**
  * This class provides the functionality to read a sudoku-file and generate a

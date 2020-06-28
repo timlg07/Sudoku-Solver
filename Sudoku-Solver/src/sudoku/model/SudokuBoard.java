@@ -1,4 +1,4 @@
-package de.tim_greller.sudoku.model;
+package sudoku.model;
 
 import java.util.BitSet;
 
@@ -42,6 +42,10 @@ public class SudokuBoard implements Board {
      * <p>Setting a cells content to a number removes this number from the 
      * possible values in all other cells sharing a structure with the specified
      * cell.</p>
+     * <p>A sudoku is seen as unsolvable if and only if a structure contains a
+     * duplicate or a cell that can not be set to any number without causing a 
+     * duplicate. It does not check if every structure can contain all numbers.
+     * </p>
      * 
      * @throws IllegalStateException Trying to overwrite a fixed cell.
      */
@@ -77,7 +81,7 @@ public class SudokuBoard implements Board {
             }
         }
     }
-    
+
     /**
      * {@inheritDoc}
      * Does nothing if the cell is already set to a fixed value.
