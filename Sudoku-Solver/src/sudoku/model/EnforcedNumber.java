@@ -39,24 +39,14 @@ public class EnforcedNumber implements Saturator {
     private boolean saturateStructure(Board board, Structure struct, int major) 
             throws UnsolvableSudokuException {
         boolean modifiedBoard = false;
-        int[] amountsOfpossibleCells = computeAmounts(board, struct, major);
+        int[] amountsOfPossibleCells = computeAmounts(board, struct, major);
         
         for (int minor = 0; minor < board.getNumbers(); minor++) {
-            boolean modifiedCurrentCell = false;
             int[] possibilities = board.getPossibilities(struct, major, minor);
             
             if (possibilities != null) {
                 for (int possibility : possibilities) {
-                    if (amountsOfpossibleCells[possibility - 1] == 1) {
-                        
-                        if (modifiedCurrentCell) {
-                            /*
-                             * Two values in this structure can only be assigned
-                             * to the current cell. As a cell can only hold one
-                             * value, the sudoku is not solvable.
-                             */
-                            throw new UnsolvableSudokuException();
-                        }
+                    if (amountsOfPossibleCells[possibility - 1] == 1) {
                         
                         try {
                             board.setCell(struct, major, minor, possibility);
@@ -64,7 +54,6 @@ public class EnforcedNumber implements Saturator {
                             throw new UnsolvableSudokuException();
                         }
                         
-                        modifiedCurrentCell = true;
                         modifiedBoard = true;
                     }
                 }
