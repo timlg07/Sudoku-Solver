@@ -139,13 +139,18 @@ public final class Shell {
             List<Board> solutions 
                 = currentSolver.findAllSolutions(currentBoard);
             
-            // Sort all sudokus and join their string representation.
-            String output = solutions.stream()
-                                     .sorted()
-                                     .map(Board::toString)
-                                     .collect(Collectors.joining("\n"));
-
-            System.out.println(output);
+            if (solutions.size() == 0) {
+                printError("This board is unsolvable");
+            } else {
+            
+                // Sort all sudokus and join their string representation.
+                String output = solutions.stream()
+                                         .sorted()
+                                         .map(Board::toString)
+                                         .collect(Collectors.joining("\n"));
+                
+                System.out.println(output);
+            }
         }
     }
 

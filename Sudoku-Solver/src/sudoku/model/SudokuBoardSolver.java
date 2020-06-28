@@ -68,7 +68,7 @@ public class SudokuBoardSolver implements SudokuSolver {
      */
     @Override
     public Board findFirstSolution(Board board) {
-        return solve(board, false).get(0);
+        return solve(board, false).stream().findFirst().orElse(null);
     }
 
     /**
@@ -128,12 +128,13 @@ public class SudokuBoardSolver implements SudokuSolver {
     
     /**
      * Tries to solve a given sudoku using backtracking. The saturators are used
-     * to speed up the process of sorting out wrong boards.
+     * to speed up the process of sorting out unsolvable boards.
      * 
      * @param board The sudoku that should be solved. Will not be changed.
      * @param requestAllSolutions Whether all solutions are needed or one is
      *        sufficient.
      * @return A List containing one or, if requested, all solutions of board.
+     *         For unsolvable sudokus an empty list is returned.
      */
     private List<Board> solve(Board board, boolean requestAllSolutions) {
         List<Board> solutions = new LinkedList<Board>();
