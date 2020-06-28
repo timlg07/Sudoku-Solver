@@ -76,10 +76,6 @@ public class SudokuBoard implements Board {
                 removePossibility(currentStructure, currentMajor, i, number);
             }
         }
-        
-        if (!isEveryNumberSetable()) {
-            throw new InvalidSudokuException();
-        }
     }
 
     /**
@@ -389,92 +385,5 @@ public class SudokuBoard implements Board {
             throw new IllegalArgumentException(
                     "Unexpected structure: " + target);
         }
-    }
-    
-    /**
-     * 
-     * @return
-     */
-    private boolean isEveryNumberSetable() {
-        for (Structure struct : Structure.values()) {
-            System.out.println();
-            for (int structNr = 0; structNr < numbers; structNr++) {
-                if (!isEveryNumberSetable(struct, structNr)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-    
-    private boolean isEveryNumberSetable(Structure struct, int structNr) {
-        int[] possibleCells = computePossibleCells(struct, structNr);
-        
-        for (int number = 0; number < numbers; number++) {
-            if (possibleCells[number] == 0) {
-                System.out.println("num:"+number+", posscells:"+possibleCells[number]);
-                /*
-                 * A number cannot be assigned to any cell in the current
-                 * structure.
-                 */
-                return false;
-            }
-        }
-        
-        for (int cellNr = 0; cellNr < numbers; cellNr++) {
-            
-            /*
-             * Indicates if the current cell is occupied by a number that cannot
-             * be assigned to any other cell in the current structure.
-             */
-            boolean isOccupied = false;
-            
-            int[] possibilities = getPossibilities(struct, structNr, cellNr);
-
-            if (possibilities != null) {
-                for (int possibility : possibilities) {
-                    
-                    // The amount of cells that can contain the current number.
-                    int currentPossibleCells = possibleCells[possibility - 1];
-                    
-                    if (currentPossibleCells == 1) {
-                        if (isOccupied) {
-                            /*
-                             * Two or more values in this structure can only be
-                             * assigned to the current cell. As a cell can only
-                             * hold one value, not every number can be set.
-                             */
-                            return false;
-                        }
-                        isOccupied = true;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-    
-    /**
-     * Computes the amount of possible cells a number can be placed at in the
-     * specified structure.
-     * 
-     * @param struct The type of the structure.
-     * @param structNr The number of the structure.
-     * @return For each number the array contains the amount of cells in the
-     *         structure this number can be assigned to, starting with the
-     *         number 1 at index 0.
-     */
-    private int[] computePossibleCells(Structure struct, int structNr) {
-        int[] amountsOfPossibleCells = new int[numbers];
-        for (int cellNr = 0; cellNr < numbers; cellNr++) {
-            int[] possibilities = getPossibilities(
-                    struct, structNr, cellNr);
-            if (possibilities != null) {
-                for (int possibility : possibilities) {
-                    amountsOfPossibleCells[possibility - 1]++;
-                }
-            }
-        }
-        return amountsOfPossibleCells;
     }
 }
