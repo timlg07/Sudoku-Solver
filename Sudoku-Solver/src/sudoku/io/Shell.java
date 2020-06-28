@@ -115,7 +115,7 @@ public final class Shell {
             
         case "print":
             if (requireLoadedBoard()) {
-                prettyPrint(currentBoard);
+                System.out.println(currentBoard.prettyPrint());
             }
             break;
             
@@ -155,7 +155,7 @@ public final class Shell {
     private static void printSolvedSudoku() {
         if (requireLoadedBoard()) {
             Board solvedBoard = currentSolver.findFirstSolution(currentBoard);
-            prettyPrint(solvedBoard);
+            prettyPrintSolved(solvedBoard);
         }
     }
     
@@ -166,7 +166,7 @@ public final class Shell {
     private static void printSaturatedSudoku() {
         if (requireLoadedBoard()) {
             Board saturatedBoard = currentSolver.saturate(currentBoard);
-            prettyPrint(saturatedBoard);
+            prettyPrintSolved(saturatedBoard);
         }
     }
     
@@ -225,12 +225,17 @@ public final class Shell {
     }
     
     /**
-     * Prints the given {@link Board} as a rectangle.
-     * @param board The board that should be printed, not null.
+     * Prints the given {@link Board} as a rectangle. If the board is 
+     * {@code null} an error indicating that the board is unsolvable is printed.
+     * 
+     * @param board The solved board that should be printed, may be null.
      */
-    private static void prettyPrint(Board board) {
-        assert (board != null);
-        System.out.println(board.prettyPrint());
+    private static void prettyPrintSolved(Board board) {
+        if (board == null) {
+            printError("This board is unsolvable");
+        } else {
+            System.out.println(board.prettyPrint());
+        }
     }
     
     /**
@@ -255,14 +260,15 @@ public final class Shell {
                 + " indicated as dots.\n"
                 
                 + "first    Computes and prints the first found solution of the"
-                + " sudoku.\n"
+                + " sudoku if it is solvable.\n"
                 
                 + "all      Generates all possible sudokus and prints them "
                 + "(one sudoku per line) in ascending order.\n"
                 
-                + "saturate Prints the sudoku with all strategies applied. "
-                + "Since this will not do any backtracking, the provided sudoku"
-                + " can, but does not have to be fully solved.\n"
+                + "saturate Prints the sudoku with all strategies applied if "
+                + "they do not lead to an unsolvable sudoku. Since this will "
+                + "not do any backtracking, the provided sudoku can, but does "
+                + "not have to be fully solved.\n"
                 
                 + "print    Prints the currently loaded sudoku.\n"
                 
