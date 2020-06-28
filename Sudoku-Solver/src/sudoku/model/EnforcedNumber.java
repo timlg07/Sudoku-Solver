@@ -42,18 +42,29 @@ public class EnforcedNumber implements Saturator {
         int[] amountsOfPossibleCells = computeAmounts(board, struct, major);
         
         for (int minor = 0; minor < board.getNumbers(); minor++) {
+            boolean modifiedCurrentCell = false;
             int[] possibilities = board.getPossibilities(struct, major, minor);
             
             if (possibilities != null) {
                 for (int possibility : possibilities) {
+
                     if (amountsOfPossibleCells[possibility - 1] == 1) {
+                        if (modifiedCurrentCell) {
+                            /*
+                             * Two values in this structure can only be assigned
+                             * to the current cell. As a cell can only hold one
+                             * value, the sudoku is not solvable.
+                             */
+                            throw new UnsolvableSudokuException();
+                        }
                         
                         try {
                             board.setCell(struct, major, minor, possibility);
                         } catch (InvalidSudokuException e) {
                             throw new UnsolvableSudokuException();
                         }
-                        
+
+                        modifiedCurrentCell = true;
                         modifiedBoard = true;
                     }
                 }
