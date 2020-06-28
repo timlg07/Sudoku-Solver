@@ -92,34 +92,34 @@ public final class Shell {
     private static boolean executeCommand(String[] tokenizedInput) {
         String cmd = tokenizedInput[0].toLowerCase();
 
-        switch (cmd) {
-        case "input":
+        switch (cmd.charAt(0)) {
+        case 'i':
             inputSudoku(tokenizedInput);
             break;
             
-        case "saturate":
+        case 's':
             printSaturatedSudoku();
             break;
             
-        case "first":
+        case 'f':
             printSolvedSudoku();
             break;
             
-        case "all":
+        case 'a':
             printAllSolutions();
             break;
             
-        case "help":
+        case 'h':
             printHelpText();
             break;
             
-        case "print":
+        case 'p':
             if (requireLoadedBoard()) {
                 System.out.println(currentBoard.prettyPrint());
             }
             break;
             
-        case "quit":
+        case 'q':
             return false;
             
         default:
