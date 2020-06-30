@@ -1,6 +1,6 @@
 package sudoku.gui;
 
-public class Controler implements Observer {
+public class Controller implements Observer {
 
     @Override
     public void update() {
