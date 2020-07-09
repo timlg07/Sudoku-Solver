@@ -1,4 +1,4 @@
-package sudoku.model;
+package sudoku.solver;
 
 /**
  * Exception if one likes to set a number which is not possible.

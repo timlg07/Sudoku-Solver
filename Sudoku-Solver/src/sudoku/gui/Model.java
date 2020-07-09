@@ -3,10 +3,10 @@ package sudoku.gui;
 import java.io.File;
 
 import sudoku.io.SudokuFileParser;
-import sudoku.model.Board;
-import sudoku.model.InvalidSudokuException;
-import sudoku.model.Structure;
-import sudoku.model.SudokuBoard;
+import sudoku.solver.Board;
+import sudoku.solver.InvalidSudokuException;
+import sudoku.solver.Structure;
+import sudoku.solver.SudokuBoard;
 
 public class Model extends Observable {
     

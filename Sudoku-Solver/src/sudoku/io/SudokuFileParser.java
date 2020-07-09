@@ -6,10 +6,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Optional;
 
-import sudoku.model.Board;
-import sudoku.model.InvalidSudokuException;
-import sudoku.model.Structure;
-import sudoku.model.SudokuBoard;
+import sudoku.solver.Board;
+import sudoku.solver.InvalidSudokuException;
+import sudoku.solver.Structure;
+import sudoku.solver.SudokuBoard;
 
 /**
  * This class provides the functionality to read a sudoku-file and generate a

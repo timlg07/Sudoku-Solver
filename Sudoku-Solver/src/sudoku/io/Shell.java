@@ -7,12 +7,12 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import sudoku.model.Board;
-import sudoku.model.EnforcedCell;
-import sudoku.model.EnforcedNumber;
-import sudoku.model.InvalidSudokuException;
-import sudoku.model.SudokuBoardSolver;
-import sudoku.model.SudokuSolver;
+import sudoku.solver.Board;
+import sudoku.solver.EnforcedCell;
+import sudoku.solver.EnforcedNumber;
+import sudoku.solver.InvalidSudokuException;
+import sudoku.solver.SudokuBoardSolver;
+import sudoku.solver.SudokuSolver;
 
 /**
  * The shell class handles the interaction between the user and the data model

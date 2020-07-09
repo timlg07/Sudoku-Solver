@@ -1,4 +1,4 @@
-package sudoku.model;
+package sudoku.solver;
 
 /**
  * Exception if board gets unsolvable.
