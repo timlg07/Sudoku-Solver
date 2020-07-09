@@ -8,7 +8,7 @@ import sudoku.solver.InvalidSudokuException;
 import sudoku.solver.Structure;
 import sudoku.solver.SudokuBoard;
 
-public class Model extends Observable {
+public class DisplayData extends Observable {
     
     private static final int UNSET_CELL = -1;
     

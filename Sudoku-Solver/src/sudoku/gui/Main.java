@@ -5,7 +5,7 @@ import javax.swing.SwingUtilities;
 public class Main {
 
     public static void main(String[] args) {
-        Model model = new Model();
+        DisplayData model = new DisplayData();
         SwingUtilities.invokeLater(() -> new SudokuFrame(model));
     }
 
