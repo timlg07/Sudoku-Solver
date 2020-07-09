@@ -10,6 +10,7 @@ public class SudokuFrame extends JFrame implements Observer {
     private static final Dimension PREF_SIZE = new Dimension(600, 300);
     private final Model model;
 
+    public SudokuFrame(Model model) {
         this.model = model;
         model.attachObserver(this);
         

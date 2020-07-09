@@ -1,21 +1,46 @@
 package sudoku.gui;
 
+import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 
 public abstract class Observable {
-    
-    List<Observer> observers = new LinkedList<Observer>();
+
+    private boolean changed = false;
+    private Collection<Observer> observers = new LinkedList<Observer>();
     
     public void attachObserver(Observer observer) {
-        observers.add(observer);
+        if (!observers.contains(observer)) {
+            observers.add(observer);
+        }
     }
     
     public void detachObserver(Observer observer) {
         observers.remove(observer);
     }
     
+    public void detachAllObservers() {
+        observers.clear();
+    }
+
     public void notifyObservers() {
-        observers.forEach(Observer::update);
+        notifyObservers(null);
+    }
+    
+    public void notifyObservers(Object argument) {
+        if (hasChanged()) {
+            observers.forEach(o -> o.update(this, argument));
+        }
+    }
+    
+    public boolean hasChanged() {
+        return changed;
+    }
+    
+    protected void setChanged() {
+        changed = true;
+    }
+    
+    protected void clearChanged() {
+        changed = false;
     }
 }

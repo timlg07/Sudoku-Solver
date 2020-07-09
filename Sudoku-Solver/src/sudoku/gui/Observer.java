@@ -2,6 +2,6 @@ package sudoku.gui;
 
 public interface Observer {
 
-    public void update();
+    public void update(Observable observable, Object argument);
     
 }
