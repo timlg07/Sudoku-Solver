@@ -2,8 +2,10 @@ package sudoku.io;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Optional;
 
 import sudoku.solver.Board;
@@ -34,37 +36,31 @@ public final class SudokuFileParser {
      * contains (syntactic or semantic) invalid data.
      * 
      * @param sudokuFile The file that should be parsed.
-     * @return The created board or {@code null} if no valid board can be built.
+     * @return The created board.
+     * @throws FileNotFoundException The given file was not found.
+     * @throws IOException Unable to read the given sudoku file.
+     * @throws ParseException The sudoku file cannot be parsed to a board.
      * @throws InvalidSudokuException The sudoku from the file cannot be solved.
      */
     public static Board parseToBoard(File sudokuFile) 
-            throws InvalidSudokuException {
+            throws FileNotFoundException, IOException, ParseException,
+                   InvalidSudokuException {        
         try (BufferedReader in 
                 = new BufferedReader(new FileReader(sudokuFile))) {
-            
+        
             // Create a Board using the dimensions specified in the first line.
             String line = in.readLine();
             if (line == null) {
-                printParseError("The file is empty.");
-                return null;
+                throw new ParseException("The file is empty.", 0);
             }
             Board board = createBoard(line.split(DELIMITER));
-            if (board == null) {
-                return null;
-            }
-            
+    
             // Append each line of the file as row to the board.
             for (int i = 0; i < board.getNumbers(); i++) {
                 line = in.readLine();
-                if (!appendRow(board, i, line)) {
-                    return null;
-                }
+                appendRow(board, i, line);
             }
             return board;
-            
-        } catch (IOException e) {
-            printParseError("Unable to read the file.");
-            return null;
         }
     }
     
@@ -73,9 +69,10 @@ public final class SudokuFileParser {
      * board with the parsed row- and col-dimensions.
      * 
      * @param dimensions The row- and col-dimensions.
-     * @return The created board or {@code null} if parsing was not successful.
+     * @return The created board.
+     * @throws ParseException The first line is invalid.
      */
-    private static Board createBoard(String[] dimensions) {
+    private static Board createBoard(String[] dimensions) throws ParseException {
         if (dimensions.length >= 2) {
             Optional<Integer> rows = parseInt(dimensions[0]);
             Optional<Integer> cols = parseInt(dimensions[1]);
@@ -84,8 +81,8 @@ public final class SudokuFileParser {
             }
         }
         
-        printParseError("Invalid first line.");
-        return null;
+        throw new ParseException(
+                "The first line contains invalid dimensions.", 0);
     }
     
     /**
@@ -95,43 +92,42 @@ public final class SudokuFileParser {
      * @param board The board to which the row should be appended.
      * @param rowIndex The (major) row-index of the new row.
      * @param line The line representing the row.
-     * @return {@code true} if parsing the row was successful.
      * @throws InvalidSudokuException The sudoku cannot be solved with this row
      *         appended.
+     * @throws ParseException The line contains data that cannot be parsed.
      */
-    private static boolean appendRow(Board board, int rowIndex, String line) 
-            throws InvalidSudokuException {
+    private static void appendRow(Board board, int rowIndex, String line) 
+            throws ParseException, InvalidSudokuException {
+        int parseOffset = rowIndex * board.getNumbers();
+        
         if (line == null) {
-            printParseError("Invalid amount of lines.");
-            return false;
+            throw new ParseException("Invalid amount of lines.", parseOffset);
         }
         
         String[] row = line.trim().split(DELIMITER);
         if (row.length != board.getNumbers()) {
-            printParseError("Invalid line length.");
-            return false;
+            throw new ParseException("Invalid line length.", parseOffset);
         }
         
         for (int i = 0; i < row.length; i++) {
-            int cellValue = parseCellValue(row[i]);
+            int cellValue = parseCellValue(row[i], parseOffset + i);
             if ((cellValue > 0) && (cellValue <= board.getNumbers())) {
                 board.setCell(Structure.ROW, rowIndex, i, cellValue);
-            } else if (cellValue != Board.UNSET_CELL) {
-                printParseError("Invalid Board data.");
-                return false;
             }
         }
-        return true;
     }
     
     /**
      * Parses the string representation of a cell to its corresponding integer 
-     * value. Returns {@code 0} if the cell cannot be parsed.
+     * value.
      * 
      * @param cell The string that should be parsed.
+     * @param parseOffset The offset of this cell in case a parse error occurs.
      * @return The integer representation of the cell.
+     * @throws ParseException The cell contains invalid characters.
      */
-    private static int parseCellValue(String cell) {
+    private static int parseCellValue(String cell, int parseOffset) 
+            throws ParseException {
         if (cell.equals(".")) {
             return Board.UNSET_CELL;
         } else {
@@ -140,7 +136,8 @@ public final class SudokuFileParser {
                 return parsedValue.get();
             }
         }
-        return 0;
+        
+        throw new ParseException("Invalid Board data.", parseOffset);
     }
     
     /**
@@ -156,14 +153,4 @@ public final class SudokuFileParser {
             return Optional.empty();
         }
     }
-    
-    /**
-     * Prints an error text including the given message to the standard output.
-     * 
-     * @param message The message specifying the error.
-     */
-    private static void printParseError(String message) {
-        System.out.println("Parse error! " + message);
-    }
-
 }
