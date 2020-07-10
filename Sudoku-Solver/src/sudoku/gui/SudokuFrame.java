@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -13,27 +15,32 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import sudoku.io.SudokuFileParser;
-import sudoku.solver.Board;
 import sudoku.solver.InvalidSudokuException;
 
 public class SudokuFrame extends JFrame implements Observer {
     
     private static final long serialVersionUID = 1L;
     private static final Dimension PREF_SIZE = new Dimension(600, 300);
-    private final DisplayData model;
+    private final DisplayData dataModel;
+    
+    /**
+     * Using one instance of JFileChooser, the last folder will be remembered.
+     */
+    private final JFileChooser fileChooser = new JFileChooser();
 
-    public SudokuFrame(DisplayData model) {
-        this.model = model;
-        model.attachObserver(this);
+    public SudokuFrame(DisplayData dataModel) {
+        this.dataModel = dataModel;
+        dataModel.attachObserver(this);
+
+        fileChooser.setFileFilter(
+                new FileNameExtensionFilter("Sudoku File", "sud"));
         
         setJMenuBar(new SudokuMenuBar());
 
         setPreferredSize(PREF_SIZE);
-        setSize(PREF_SIZE);
+        setSize(PREF_SIZE); // initial size when no sudoku is loaded.
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setVisible(true);
     }
@@ -71,21 +78,19 @@ public class SudokuFrame extends JFrame implements Observer {
 
                 @Override
                 public void actionPerformed(ActionEvent evt) {
-                    JFileChooser fileChooser = new JFileChooser();
-                    fileChooser.setFileFilter(
-                            new FileNameExtensionFilter("Sudoku File", "sud"));
-                    
                     int success = fileChooser.showOpenDialog(SudokuFrame.this);
                     if (success == JFileChooser.APPROVE_OPTION) {
                         File sudokuFile = fileChooser.getSelectedFile();
                         try {
-                            Board b = SudokuFileParser.parseToBoard(sudokuFile);
-                            System.out.println(b.prettyPrint());
-                        } catch (InvalidSudokuException exc) {
+                            dataModel.loadSudokuFromFile(sudokuFile);
+                            System.out.println(
+                                    dataModel.getIntelligentBoard().prettyPrint());
+                        } catch (InvalidSudokuException | IOException 
+                                | ParseException exc) {
                             JOptionPane.showMessageDialog(
                                     SudokuFrame.this, 
-                                    "Invalid Sudoku.", 
-                                    "Invalid Sudoku.",
+                                    exc.getMessage(),
+                                    "Unable to parse this file.", 
                                     JOptionPane.ERROR_MESSAGE);
                         }
                     }

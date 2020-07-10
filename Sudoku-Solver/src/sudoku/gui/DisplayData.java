@@ -1,6 +1,9 @@
 package sudoku.gui;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.text.ParseException;
 
 import sudoku.io.SudokuFileParser;
 import sudoku.solver.Board;
@@ -18,15 +21,21 @@ public class DisplayData extends Observable {
     private int boxCols;
     private int numbers;
     
-    void loadSudokuFromFile(File sudokuFile) throws InvalidSudokuException {
+    public void loadSudokuFromFile(File sudokuFile) throws InvalidSudokuException, 
+            FileNotFoundException, IOException, ParseException {
         intelligentBoard = SudokuFileParser.parseToBoard(sudokuFile);
     }
     
+    public Board getIntelligentBoard() {
+        return intelligentBoard;
+    }
+    
     void updateDisplayData() {
+        setChanged();
         notifyObservers();
     }
     
-    void updateDisplayData(Board board) {
+    public void applyIntelligentBoard(Board board) {
         numbers = board.getNumbers();
         
         uncheckedBoard = new int[numbers][numbers];
@@ -42,7 +51,7 @@ public class DisplayData extends Observable {
         updateDisplayData();
     }
     
-    private void createIntelligentBoard() throws InvalidSudokuException {
+    private void applyUncheckedBoard() throws InvalidSudokuException {
         intelligentBoard = new SudokuBoard(boxRows, boxCols);
         
         for (int boxNr = 0; boxNr < numbers; boxNr++) {
