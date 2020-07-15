@@ -23,7 +23,7 @@ public class SudokuFrame extends JFrame implements Observer {
     
     private static final long serialVersionUID = 1L;
     private static final Dimension PREF_SIZE = new Dimension(600, 300);
-    private final DisplayData dataModel;
+    private final DisplayData data;
     
     /**
      * Using one instance of JFileChooser, the last folder will be remembered.
@@ -31,7 +31,7 @@ public class SudokuFrame extends JFrame implements Observer {
     private final JFileChooser fileChooser = new JFileChooser();
 
     public SudokuFrame(DisplayData dataModel) {
-        this.dataModel = dataModel;
+        this.data = dataModel;
         dataModel.attachObserver(this);
 
         fileChooser.setFileFilter(
@@ -44,8 +44,6 @@ public class SudokuFrame extends JFrame implements Observer {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setVisible(true);
     }
-    
-    
     
     @Override
     public void update(Observable observable, Object argument) {
@@ -73,29 +71,8 @@ public class SudokuFrame extends JFrame implements Observer {
             undo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, CTRL));
             suggest.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, CTRL));
             solve.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, CTRL));
-            
-            open.addActionListener(new ActionListener() {
 
-                @Override
-                public void actionPerformed(ActionEvent evt) {
-                    int success = fileChooser.showOpenDialog(SudokuFrame.this);
-                    if (success == JFileChooser.APPROVE_OPTION) {
-                        File sudokuFile = fileChooser.getSelectedFile();
-                        try {
-                            dataModel.loadSudokuFromFile(sudokuFile);
-                            System.out.println(
-                                    dataModel.getIntelligentBoard().prettyPrint());
-                        } catch (InvalidSudokuException | IOException 
-                                | ParseException exc) {
-                            JOptionPane.showMessageDialog(
-                                    SudokuFrame.this, 
-                                    exc.getMessage(),
-                                    "Unable to parse this file.", 
-                                    JOptionPane.ERROR_MESSAGE);
-                        }
-                    }
-                }
-            });
+            open.addActionListener(new OpenFileActionListener());
             
             exit.addActionListener(new ActionListener() {
                 
@@ -114,6 +91,28 @@ public class SudokuFrame extends JFrame implements Observer {
             add(fileMenu);
             add(editMenu);
             add(solveMenu);
+        }
+    }
+    
+    
+    private class OpenFileActionListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent evt) {
+            int fileChooserState = fileChooser.showOpenDialog(SudokuFrame.this);
+            if (fileChooserState == JFileChooser.APPROVE_OPTION) {
+                File sudokuFile = fileChooser.getSelectedFile();
+                try {
+                    data.loadSudokuFromFile(sudokuFile);
+                } catch (InvalidSudokuException | IOException 
+                        | ParseException exc) {
+                    JOptionPane.showMessageDialog(
+                            SudokuFrame.this, 
+                            exc.getMessage(),
+                            "Unable to parse this file.", 
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
         }
     }
 
