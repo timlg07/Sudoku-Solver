@@ -23,8 +23,8 @@ public class DisplayData extends Observable {
      */
     public static final Structure STRUCT = Structure.BOX;
     
-    private int[][] uncheckedBoard;
-    private boolean[][] isConstant;
+    private volatile int[][] uncheckedBoard;
+    private volatile boolean[][] isConstant;
     private int boxRows;
     private int boxCols;
     private int numbers;
@@ -64,7 +64,7 @@ public class DisplayData extends Observable {
     }
     
     private void assertValueInRange(int value) {
-        if ((value <= 0) || (value > numbers)) {
+        if ((value != UNSET_CELL) && ((value <= 0) || (value > numbers))) {
             throw new IllegalArgumentException("The value \"" + value 
                     + "\" is not allowed in the current board.");
         }
@@ -96,38 +96,25 @@ public class DisplayData extends Observable {
         }
         
         int newSize = board.getNumbers();
-        boolean differs = (numbers != newSize);
         int[][] newUncheckedBoard = new int[newSize][newSize];
+        boolean[][] newIsConstant = new boolean[newSize][newSize];
         
         for (int major = 0; major < newSize; major++) {
             for (int minor = 0; minor < newSize; minor++) {
                 int cell = board.getCell(STRUCT, major, minor);
                 boolean isSet = (cell != Board.UNSET_CELL);
-
-                if (!differs) {
-                    /*
-                     * If the current uncheckedBoard was never defined, or is a
-                     * board with different dimensions, `differs` would be true.
-                     */
-                    assert uncheckedBoard != null;
-                    assert major < uncheckedBoard.length;
-                    assert minor < uncheckedBoard[major].length;
-                    
-                    differs = (uncheckedBoard[major][minor] != cell);
-                }
                 
                 newUncheckedBoard[major][minor] = (isSet ? cell : UNSET_CELL);
-                isConstant[major][minor] = (isSet && isInitial);
+                newIsConstant[major][minor] = (isSet && isInitial);
             }
         }
 
-        if (differs) {
-            uncheckedBoard = newUncheckedBoard;
-            numbers = newSize;
-            boxCols = board.getBoxColumns();
-            boxRows = board.getBoxRows();
-            setChanged();        
-        }
+        uncheckedBoard = newUncheckedBoard;
+        isConstant = newIsConstant;
+        numbers = newSize;
+        boxCols = board.getBoxColumns();
+        boxRows = board.getBoxRows();
+        setChanged();
         notifyObservers();
     }
     
