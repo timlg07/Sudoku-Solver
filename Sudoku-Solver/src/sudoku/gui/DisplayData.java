@@ -24,11 +24,15 @@ public class DisplayData extends Observable {
     public static final Structure STRUCT = Structure.BOX;
     
     private int[][] uncheckedBoard;
+    private boolean[][] isConstant;
     private int boxRows;
     private int boxCols;
     private int numbers;
 
     public int getCell(int major, int minor) {
+        assertIndexInRange(major);
+        assertIndexInRange(minor);
+        
         return uncheckedBoard[major][minor];
     }
     
@@ -37,7 +41,19 @@ public class DisplayData extends Observable {
         assertIndexInRange(minor);
         assertValueInRange(value);
         
-        uncheckedBoard[major][minor] = value;
+        if (uncheckedBoard[major][minor] != value) {
+            uncheckedBoard[major][minor] = value;
+            setChanged();
+        }
+        
+        notifyObservers();
+    }
+    
+    public boolean isCellModifiable(int major, int minor) {
+        assertIndexInRange(major);
+        assertIndexInRange(minor);
+        
+        return !isConstant[major][minor];
     }
     
     private void assertIndexInRange(int index) {
@@ -66,31 +82,42 @@ public class DisplayData extends Observable {
         return numbers;
     }
     
-    public void loadSudokuFromFile(File sudokuFile) throws InvalidSudokuException, 
-            FileNotFoundException, IOException, ParseException {
+    public void loadSudokuFromFile(File sudokuFile) 
+            throws InvalidSudokuException, FileNotFoundException, IOException, 
+            ParseException {
         Board intelligentBoard = SudokuFileParser.parseToBoard(sudokuFile);
-        applyIntelligentBoard(intelligentBoard);
+        applyIntelligentBoard(intelligentBoard, true);
     }
 
-    public void applyIntelligentBoard(Board board) {
+    public void applyIntelligentBoard(Board board, boolean isInitial) {
+        if (board == null) {
+            throw new IllegalArgumentException(
+                    "Cannot apply \"null\" as Board.");
+        }
+        
         int newSize = board.getNumbers();
         boolean differs = (numbers != newSize);
         int[][] newUncheckedBoard = new int[newSize][newSize];
         
         for (int major = 0; major < newSize; major++) {
             for (int minor = 0; minor < newSize; minor++) {
-                int cellValue = board.getCell(STRUCT, major, minor);
-                
-                // Convert unset cell representation:
-                cellValue = ((cellValue == Board.UNSET_CELL) 
-                          ? UNSET_CELL 
-                          : cellValue);
+                int cell = board.getCell(STRUCT, major, minor);
+                boolean isSet = (cell != Board.UNSET_CELL);
 
                 if (!differs) {
-                    assert uncheckedBoard[major] != null;
-                    differs = (uncheckedBoard[major][minor] != cellValue);
+                    /*
+                     * If the current uncheckedBoard was never defined, or is a
+                     * board with different dimensions, `differs` would be true.
+                     */
+                    assert uncheckedBoard != null;
+                    assert major < uncheckedBoard.length;
+                    assert minor < uncheckedBoard[major].length;
+                    
+                    differs = (uncheckedBoard[major][minor] != cell);
                 }
-                newUncheckedBoard[major][minor] = cellValue;
+                
+                newUncheckedBoard[major][minor] = (isSet ? cell : UNSET_CELL);
+                isConstant[major][minor] = (isSet && isInitial);
             }
         }
 
