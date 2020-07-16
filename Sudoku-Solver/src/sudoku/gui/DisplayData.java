@@ -45,8 +45,8 @@ public class DisplayData extends Observable {
             uncheckedBoard[major][minor] = value;
             setChanged();
         }
-        
-        notifyObservers();
+
+        notifyObservers(false);
     }
     
     public boolean isCellModifiable(int major, int minor) {
@@ -115,7 +115,7 @@ public class DisplayData extends Observable {
         boxCols = board.getBoxColumns();
         boxRows = board.getBoxRows();
         setChanged();
-        notifyObservers();
+        notifyObservers(true);
     }
     
     private Board generateIntelligentBoard() throws InvalidSudokuException {

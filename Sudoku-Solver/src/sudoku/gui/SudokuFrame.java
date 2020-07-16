@@ -10,9 +10,8 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.stream.Stream;
 
+import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -22,6 +21,9 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import sudoku.solver.InvalidSudokuException;
@@ -30,12 +32,11 @@ import sudoku.solver.Structure;
 public class SudokuFrame extends JFrame implements Observer {
     
     private static final long serialVersionUID = 1L;
-    private static final Dimension PREF_SIZE = new Dimension(600, 300);
+    private static final Dimension PREF_SIZE = new Dimension(400, 300);
+    private static final Border BOX_BORDER 
+            = BorderFactory.createBevelBorder(BevelBorder.LOWERED);
     
     private final DisplayData data;
-    private SudokuCell[][] cells; 
-    private int boxCols;
-    private int boxRows;
     
     /**
      * Using one instance of JFileChooser, the last folder will be remembered.
@@ -50,9 +51,21 @@ public class SudokuFrame extends JFrame implements Observer {
                 new FileNameExtensionFilter("Sudoku File", "sud"));
         
         setJMenuBar(new SudokuMenuBar());
+        
+        // The info text that initially explains why the window is empty.
+        String info = "No sudoku file loaded. Press CTRL + O to open a file.";
+        
+        // Apply basic CSS style to the info text for proper line wrapping.
+        add(new JLabel("<html><body style='width: 100%; text-align: center;'>" 
+                + info + "</body></html>", SwingConstants.CENTER));
 
-        setPreferredSize(PREF_SIZE);
-        setSize(PREF_SIZE); // initial size when no sudoku is loaded.
+        /*
+         * By setting the pref. size on the content pane, it won't be necessary
+         * to restore the default behavior once a sudoku is loaded.
+         */
+        getContentPane().setPreferredSize(PREF_SIZE);
+        pack();
+
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setVisible(true);
     }
@@ -60,19 +73,18 @@ public class SudokuFrame extends JFrame implements Observer {
     @Override
     public void update(Observable observable, Object argument) {
         assert data == ((DisplayData) observable);
-        boolean sizeChanged = (data.getBoxCols() != boxCols) 
-                              || (data.getBoxRows() != boxRows);
-        if (sizeChanged) {
-            boxCols = data.getBoxCols();
-            boxRows = data.getBoxRows();
+        assert argument != null;
+        
+        Boolean newSudokuLoaded = (Boolean) argument;
+        if (newSudokuLoaded) {
             resetBoardView();
         }
-        
-        updateCellValues();
     }
     
     private void resetBoardView() {
         int numbers = data.getNumbers();
+        int boxRows = data.getBoxRows();
+        int boxCols = data.getBoxCols();
         Container content = new Container();
 
         // The layout manager used to arrange cells in a box.
@@ -81,11 +93,12 @@ public class SudokuFrame extends JFrame implements Observer {
         // Set the layout manager of the container which contains all boxes.
         content.setLayout(new GridLayout(boxCols, boxRows));
         
-        cells = new SudokuCell[numbers][numbers];
+        SudokuCell[][] cells = new SudokuCell[numbers][numbers];
         
         assert DisplayData.STRUCT == Structure.BOX;
         for (int boxNr = 0; boxNr < numbers; boxNr++) {
             JPanel boxPanel = new JPanel(innerLayout);
+            boxPanel.setBorder(BOX_BORDER);
             for (int cellNr = 0; cellNr < numbers; cellNr++) {
                 SudokuCell cell = new SudokuCell(boxNr, cellNr, data);
                 cells[boxNr][cellNr] = cell;
@@ -96,13 +109,7 @@ public class SudokuFrame extends JFrame implements Observer {
         
         setContentPane(content);
         validate();
-    }
-    
-    private void updateCellValues() {
-        // Execute updateValue on every cell in the 2-dimensional cells-array.
-        Arrays.stream(cells)
-              .flatMap(Arrays::stream)
-              .forEach(SudokuCell::updateValue);
+        pack();
     }
 
     private class SudokuMenuBar extends JMenuBar {
@@ -111,6 +118,8 @@ public class SudokuFrame extends JFrame implements Observer {
         private static final int CTRL = 2;
 
         SudokuMenuBar() {
+            super();
+            
             JMenu fileMenu = new JMenu("File");
             JMenu editMenu = new JMenu("Edit");
             JMenu solveMenu = new JMenu("Solve");

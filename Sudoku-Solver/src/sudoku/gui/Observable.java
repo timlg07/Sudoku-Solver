@@ -6,19 +6,19 @@ import java.util.LinkedList;
 public abstract class Observable {
 
     private boolean changed = false;
-    private Collection<Observer> observers = new LinkedList<Observer>();
+    private Collection<Observer> observers = new LinkedList<>();
     
-    public void attachObserver(Observer observer) {
+    public synchronized void attachObserver(Observer observer) {
         if (!observers.contains(observer)) {
             observers.add(observer);
         }
     }
     
-    public void detachObserver(Observer observer) {
+    public synchronized void detachObserver(Observer observer) {
         observers.remove(observer);
     }
     
-    public void detachAllObservers() {
+    public synchronized void detachAllObservers() {
         observers.clear();
     }
 
@@ -28,19 +28,30 @@ public abstract class Observable {
     
     public void notifyObservers(Object argument) {
         if (hasChanged()) {
-            observers.forEach(o -> o.update(this, argument));
+            Collection<Observer> observersToNotify = new LinkedList<>();
+            
+            /*
+             *  Store all currently attached observers, so that the monitor does
+             *  not have to be hold for the actual notify calls without causing 
+             *  a ConcurrentModificationException.
+             */
+            synchronized (this) {
+                observersToNotify.addAll(observers);
+            }
+            
+            observersToNotify.forEach(o -> o.update(this, argument));
         }
     }
     
-    public boolean hasChanged() {
+    public synchronized boolean hasChanged() {
         return changed;
     }
     
-    protected void setChanged() {
+    protected synchronized void setChanged() {
         changed = true;
     }
     
-    protected void clearChanged() {
+    protected synchronized void clearChanged() {
         changed = false;
     }
 }
