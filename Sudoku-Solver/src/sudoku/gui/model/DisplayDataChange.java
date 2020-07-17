@@ -1,5 +1,12 @@
 package sudoku.gui.model;
 
+/**
+ * This enumeration represents different kinds of changes that can be done to
+ * an instance of DisplayData.
+ * <p>
+ * It is used to reduce the amount of possible changes a 
+ * {@link sudoku.util.Observer} has to handle on each call of the update method.
+ */
 public enum DisplayDataChange {
     
     /**
