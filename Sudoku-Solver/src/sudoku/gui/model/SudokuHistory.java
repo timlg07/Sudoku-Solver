@@ -1,6 +1,5 @@
 package sudoku.gui.model;
 
-import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -11,10 +10,23 @@ public class SudokuHistory implements Observer {
     
     private Deque<int[][]> sudokuHistoryData = new LinkedList<>();
     
+    /**
+     * Constructs a new SudokuHistory and attaches it to the given observable
+     * {@link DisplayData}, so that changes in the display data get saved
+     * automatically.
+     * 
+     * @param displayData The display data whose changes should be saved.
+     */
     public SudokuHistory(DisplayData displayData) {
         displayData.attachObserver(this);
     }
 
+    /**
+     * Saves the given state of a sudoku by pushing it to the sudoku history 
+     * {@link Deque}.
+     * 
+     * @param sudoku The current state of the sudoku that should be saved.
+     */
     private void saveSudoku(int[][] sudoku) {
         sudokuHistoryData.push(sudoku);
     }
@@ -25,22 +37,24 @@ public class SudokuHistory implements Observer {
      * returned.
      * 
      * @return The state of the sudoku after reverting the last change or 
-     *         {@code null} if the sudoku was never changed.
+     *         {@code null} if no sudoku was loaded.
      */
     public int[][] undo() {
         if (sudokuHistoryData.isEmpty()) {
             return null;
         }
         
-        /*
-         * One element has to remain in the history, so that loading a sudoku 
-         * cannot be reverted.
-         */
         if (sudokuHistoryData.size() > 1) {
+            /* Revert the last change if there are any changes saved. */
             sudokuHistoryData.pop();
         }
         
-        return sudokuHistoryData.getLast();
+        /* 
+         * Return the new sudoku state, which is going to be used by DisplayData
+         * and therefore will mutate. A clone of this state will be added 
+         * automatically.
+         */
+        return sudokuHistoryData.pop();
     }
 
     @Override
@@ -48,18 +62,15 @@ public class SudokuHistory implements Observer {
         assert observable instanceof DisplayData;
         assert argument instanceof DisplayDataChange;
         
-        switch ((DisplayDataChange) argument) {
-        case SUDOKU_LOADED:
+        if (((DisplayDataChange) argument) == DisplayDataChange.SUDOKU_LOADED) {
+            /*
+             * Remove all states of the previous sudoku before adding states of
+             * the newly loaded sudoku.
+             */
             sudokuHistoryData.clear();
-            break;
-            
-        case UNDO:
-            /* Do not store undo changes. */
-            break;
-        
-        default:
-            saveSudoku(((DisplayData) observable).cloneUncheckedBoard());
         }
+        
+        /* Save a copy of the currently displayed board. */
+        saveSudoku(((DisplayData) observable).cloneUncheckedBoard());
     }
-
 }
