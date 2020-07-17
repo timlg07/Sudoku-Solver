@@ -109,14 +109,12 @@ public class SudokuCell extends JLabel implements Observer {
             super();
             
             for (int i = 1; i <= numbers; i++) {
-                JMenuItem item = new JMenuItem(Integer.toString(i));
-                item.addActionListener(new ChangeCellActionListener(i));
-                add(item);
+                add(Integer.toString(i)).addActionListener(
+                        new ChangeCellActionListener(i));
             }
-            JMenuItem removeOption = new JMenuItem("remove");
-            removeOption.addActionListener(
+            
+            add("remove").addActionListener(
                     new ChangeCellActionListener(DisplayData.UNSET_CELL));
-            add(removeOption);
         }
         
         private class ChangeCellActionListener implements ActionListener {
