@@ -94,7 +94,7 @@ public class SudokuFrame extends JFrame implements Observer {
             resetBoardView();
             /* Falls through so the states get reseted for a new sudoku. */
             
-        case OPERATIONS_ENABLED_STATE:
+        case SUDOKU_LOCK:
             setEnableStates();
             
         default:

@@ -4,6 +4,7 @@ public enum DisplayDataChange {
     
     /**
      * A completely new sudoku with a eventually different size was loaded.
+     * A new sudoku is initially not locked.
      */
     NEW_SUDOKU,
     
@@ -15,7 +16,8 @@ public enum DisplayDataChange {
     SUDOKU_VALUES,
     
     /**
-     * All operations on the current sudoku were disabled or enabled.
+     * The sudoku was locked or unlocked which means the ability to execute
+     * operations on the current sudoku was disabled or enabled respectively.
      */
-    OPERATIONS_ENABLED_STATE;
+    SUDOKU_LOCK;
 }

@@ -80,7 +80,7 @@ public class SudokuCell extends JLabel implements Observer {
             data.detachObserver(this);
             break;
             
-        case OPERATIONS_ENABLED_STATE:
+        case SUDOKU_LOCK:
             updateEnabledOperations();
             break;
             
