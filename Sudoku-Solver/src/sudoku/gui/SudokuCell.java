@@ -89,6 +89,8 @@ public class SudokuCell extends JLabel implements Observer {
         private static final long serialVersionUID = 1L;
 
         public CellPopupMenu(int numbers) {
+            super();
+            
             for (int i = 1; i < numbers; i++) {
                 JMenuItem item = new JMenuItem(Integer.toString(i));
                 item.addActionListener(new ChangeCellActionListener(i));
