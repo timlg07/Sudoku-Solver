@@ -62,10 +62,10 @@ public class SudokuHistory implements Observer {
         assert observable instanceof DisplayData;
         assert argument instanceof DisplayDataChange;
         
-        if (((DisplayDataChange) argument) == DisplayDataChange.SUDOKU_LOADED) {
+        if (((DisplayDataChange) argument) == DisplayDataChange.NEW_SUDOKU) {
             /*
              * Remove all states of the previous sudoku before adding states of
-             * the newly loaded sudoku.
+             * the new one.
              */
             sudokuHistoryData.clear();
         }

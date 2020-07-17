@@ -69,7 +69,7 @@ public class SudokuCell extends JLabel implements Observer {
         assert argument instanceof DisplayDataChange;
         
         switch ((DisplayDataChange) argument) {
-        case SUDOKU_LOADED:
+        case NEW_SUDOKU:
             /*
              * This cell should no longer be updated as the sudoku it was part
              * of got replaced by a new one.
@@ -77,7 +77,7 @@ public class SudokuCell extends JLabel implements Observer {
             data.detachObserver(this);
             break;
             
-        case OPERATIONS_ENABLE_STATE:
+        case OPERATIONS_ENABLED_STATE:
             getComponentPopupMenu().setEnabled(
                     data.isOperationOnSudokuAllowed());
             break;

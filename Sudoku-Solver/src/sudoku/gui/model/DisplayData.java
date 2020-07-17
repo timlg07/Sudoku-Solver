@@ -4,10 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import sudoku.io.SudokuFileParser;
 import sudoku.solver.Board;
@@ -99,15 +95,49 @@ public class DisplayData extends Observable {
         clearChanged();
     }
 
-    public void applyIntelligentBoard(Board board, boolean isInitial) {
+    /**
+     * Applies the given intelligent board to the current unchecked board by
+     * transferring all values from the intelligent board to a new array and
+     * then updating the reference of the unchecked board to the new array.</p>
+     * <p>
+     * If the intelligent board is marked as initial board, it is allowed to
+     * change the sudokus size. It also resets the constant markers and then 
+     * sets all values of the intelligent board as unmodifiable constants of the
+     * new unchecked board.
+     * <p>
+     * This method sets the changed flag of the {@link Observable} represented
+     * by this DisplayData, but does not notify the observers.
+     * <p>
+     * After the execution of this method, operations on the sudoku are always
+     * allowed, until a operations locks the state (again).
+     * 
+     * @param board The intelligent board that will be used as unchecked board.
+     *              Should not be {@code null}.
+     * @param isInitial Signalizes if the board is a new initial board, which
+     *                  is allowed to overwrite the sudokus constant markers and
+     *                  its size.
+     */
+    private void applyIntelligentBoard(Board board, boolean isInitial) {
         if (board == null) {
             throw new IllegalArgumentException(
                     "Cannot apply \"null\" as Board.");
         }
+
+        if ((!isInitial) && ((boxCols != board.getBoxColumns()) 
+                              || (boxRows != board.getBoxRows()))) {
+            throw new IllegalArgumentException(
+                      "The intelligent board has a different size than the "
+                    + "current unchecked board and is not an initial board "
+                    + "which could overwrite the size");
+        }
         
         int newSize = board.getNumbers();
         int[][] newUncheckedBoard = new int[newSize][newSize];
-        boolean[][] newIsConstant = new boolean[newSize][newSize];
+        boolean[][] newIsConstant = null;
+        if (isInitial) {
+            /* Only needed if constants can be overwritten. */
+            newIsConstant = new boolean[newSize][newSize];
+        }
         
         for (int major = 0; major < newSize; major++) {
             for (int minor = 0; minor < newSize; minor++) {
@@ -115,25 +145,35 @@ public class DisplayData extends Observable {
                 boolean isSet = (cell != Board.UNSET_CELL);
                 
                 newUncheckedBoard[major][minor] = (isSet ? cell : UNSET_CELL);
-                newIsConstant[major][minor] = (isSet && isInitial);
+                
+                if (isInitial) {
+                    assert newIsConstant != null;
+                    newIsConstant[major][minor] = isSet;
+                }
             }
         }
 
+        if (isInitial) {
+            isConstant = newIsConstant;
+            numbers = newSize;
+            boxCols = board.getBoxColumns();
+            boxRows = board.getBoxRows();
+        }
         uncheckedBoard = newUncheckedBoard;
-        isConstant = newIsConstant;
-        numbers = newSize;
-        boxCols = board.getBoxColumns();
-        boxRows = board.getBoxRows();
         operationsEnabled = true;
         setChanged();
-        
-        DisplayDataChange changeType = isInitial 
-                                       ? DisplayDataChange.SUDOKU_LOADED 
-                                       : DisplayDataChange.SOLVER_CHANGE;
-        notifyObservers(changeType);
-        clearChanged();
     }
     
+    /**
+     * Tries to generate an intelligent board based on the current unchecked
+     * board.
+     * 
+     * @return An intelligent board containing the same values as the current
+     *         unchecked board.
+     * @throws InvalidSudokuException The current unchecked board is not a valid
+     *                                sudoku and an intelligent board cannot be 
+     *                                generated.
+     */
     private Board generateIntelligentBoard() throws InvalidSudokuException {
         Board result = new SudokuBoard(boxRows, boxCols);
         
@@ -149,7 +189,12 @@ public class DisplayData extends Observable {
         return result;
     }
 
-    public int[][] cloneUncheckedBoard() {
+    /**
+     * Creates and returns a copy of the currently displayed unchecked board.
+     * 
+     * @return A clone of the current unchecked board.
+     */
+    int[][] cloneUncheckedBoard() {
         int[][] copy = uncheckedBoard.clone();
         for (int i = 0; i < uncheckedBoard.length; i++) {
             copy[i] = uncheckedBoard[i].clone();
@@ -157,17 +202,21 @@ public class DisplayData extends Observable {
         return copy;
     }
     
+    /**
+     * Reverts the last change of the displayed data and notifies the observers.
+     */
     public void undo() {
-        System.out.println(Arrays.deepToString(uncheckedBoard));
         uncheckedBoard = history.undo();
-        System.out.println(Arrays.deepToString(uncheckedBoard));
-        System.out.println("----------");
-        
         setChanged();
         notifyObservers(DisplayDataChange.SUDOKU_VALUES);
         clearChanged();
     }
     
+    /**
+     * Returns whether an operation on the sudoku is currently allowed or not.
+     * 
+     * @return {@code true} if operations on the sudoku are currently allowed.
+     */
     public boolean isOperationOnSudokuAllowed() {
         return operationsEnabled;
     }
