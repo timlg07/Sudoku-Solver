@@ -1,4 +1,4 @@
-package sudoku.gui;
+package sudoku.util;
 
 public interface Observer {
 

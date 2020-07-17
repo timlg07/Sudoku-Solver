@@ -11,8 +11,14 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
+import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -27,8 +33,12 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import sudoku.gui.model.DisplayData;
+import sudoku.gui.model.DisplayDataChange;
 import sudoku.solver.InvalidSudokuException;
 import sudoku.solver.Structure;
+import sudoku.util.Observable;
+import sudoku.util.Observer;
 
 public class SudokuFrame extends JFrame implements Observer {
     
@@ -38,6 +48,7 @@ public class SudokuFrame extends JFrame implements Observer {
             = BorderFactory.createBevelBorder(BevelBorder.LOWERED);
     
     private final DisplayData data;
+    private Collection<AbstractButton> operationsOnSudoku = new ArrayList<>();
     
     /**
      * Using one instance of JFileChooser, the last folder will be remembered.
@@ -52,6 +63,7 @@ public class SudokuFrame extends JFrame implements Observer {
                 new FileNameExtensionFilter("Sudoku File", "sud"));
         
         setJMenuBar(new SudokuMenuBar());
+        setEnableStates();
         
         // The info text that initially explains why the window is empty.
         String info = "No sudoku file loaded. Press CTRL + O to open a file.";
@@ -73,15 +85,30 @@ public class SudokuFrame extends JFrame implements Observer {
     
     @Override
     public void update(Observable observable, Object argument) {
+        assert observable instanceof DisplayData;
         assert data == ((DisplayData) observable);
-        assert argument != null;
+        assert argument instanceof DisplayDataChange;
         
-        Boolean newSudokuLoaded = (Boolean) argument;
-        if (newSudokuLoaded) {
+        switch ((DisplayDataChange) argument) {
+        case SUDOKU_LOADED:
             resetBoardView();
+            /* Falls through so the states get reseted for a new sudoku. */
+            
+        case OPERATIONS_ENABLE_STATE:
+            setEnableStates();
+            
+        default:
+            /* No updates necessary, the cells get individually updated. */
+            break;
         }
     }
     
+    private void setEnableStates() {
+        operationsOnSudoku.forEach(o -> {
+            o.setEnabled(data.isOperationOnSudokuAllowed());
+        });
+    }
+
     private void resetBoardView() {
         int numbers = data.getNumbers();
         int boxRows = data.getBoxRows();
@@ -104,8 +131,7 @@ public class SudokuFrame extends JFrame implements Observer {
             JPanel boxPanel = new JPanel(innerLayout);
             boxPanel.setBorder(BOX_BORDER);
             for (int cellNr = 0; cellNr < numbers; cellNr++) {
-                Component cell = new SudokuCell(boxNr, cellNr, data);
-                boxPanel.add(cell);
+                boxPanel.add(new SudokuCell(boxNr, cellNr, data));
             }
             content.add(boxPanel);
         }
@@ -127,6 +153,9 @@ public class SudokuFrame extends JFrame implements Observer {
             JMenu editMenu = new JMenu("Edit");
             JMenu solveMenu = new JMenu("Solve");
             
+            operationsOnSudoku.add(editMenu);
+            operationsOnSudoku.add(solveMenu);
+            
             JMenuItem open = new JMenuItem("Open");
             JMenuItem exit = new JMenuItem("Exit");
             JMenuItem undo = new JMenuItem("Undo");
@@ -146,6 +175,14 @@ public class SudokuFrame extends JFrame implements Observer {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     SudokuFrame.super.dispose();
+                }
+            });
+            
+            undo.addActionListener(new ActionListener() {
+                
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    data.undo();
                 }
             });
 

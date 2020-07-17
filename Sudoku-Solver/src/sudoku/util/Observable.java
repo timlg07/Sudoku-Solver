@@ -1,4 +1,5 @@
-package sudoku.gui;
+package sudoku.util;
+
 
 import java.util.Collection;
 import java.util.LinkedList;

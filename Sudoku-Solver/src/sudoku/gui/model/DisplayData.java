@@ -1,15 +1,20 @@
-package sudoku.gui;
+package sudoku.gui.model;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import sudoku.io.SudokuFileParser;
 import sudoku.solver.Board;
 import sudoku.solver.InvalidSudokuException;
 import sudoku.solver.Structure;
 import sudoku.solver.SudokuBoard;
+import sudoku.util.Observable;
 
 public class DisplayData extends Observable {
     
@@ -28,6 +33,8 @@ public class DisplayData extends Observable {
     private int boxRows;
     private int boxCols;
     private int numbers;
+    private boolean operationsEnabled;
+    private final SudokuHistory history = new SudokuHistory(this);
 
     public int getCell(int major, int minor) {
         assertIndexInRange(major);
@@ -46,7 +53,8 @@ public class DisplayData extends Observable {
             setChanged();
         }
 
-        notifyObservers(false);
+        notifyObservers(DisplayDataChange.USER_CHANGE);
+        clearChanged();
     }
     
     public boolean isCellModifiable(int major, int minor) {
@@ -114,8 +122,14 @@ public class DisplayData extends Observable {
         numbers = newSize;
         boxCols = board.getBoxColumns();
         boxRows = board.getBoxRows();
+        operationsEnabled = true;
         setChanged();
-        notifyObservers(true);
+        
+        DisplayDataChange changeType = isInitial 
+                                       ? DisplayDataChange.SUDOKU_LOADED 
+                                       : DisplayDataChange.SOLVER_CHANGE;
+        notifyObservers(changeType);
+        clearChanged();
     }
     
     private Board generateIntelligentBoard() throws InvalidSudokuException {
@@ -131,5 +145,28 @@ public class DisplayData extends Observable {
         }
         
         return result;
+    }
+
+    public int[][] cloneUncheckedBoard() {
+        int[][] copy = uncheckedBoard.clone();
+        for (int i = 0; i < uncheckedBoard.length; i++) {
+            copy[i] = uncheckedBoard[i].clone();
+        }
+        return copy;
+    }
+    
+    public void undo() {
+        System.out.println(Arrays.deepToString(uncheckedBoard));
+        uncheckedBoard = history.undo();
+        System.out.println(Arrays.deepToString(uncheckedBoard));
+        System.out.println("----------");
+        
+        setChanged();
+        notifyObservers(DisplayDataChange.UNDO);
+        clearChanged();
+    }
+    
+    public boolean isOperationOnSudokuAllowed() {
+        return operationsEnabled;
     }
 }

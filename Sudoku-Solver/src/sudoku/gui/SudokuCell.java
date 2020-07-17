@@ -13,6 +13,11 @@ import javax.swing.SwingConstants;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
 
+import sudoku.gui.model.DisplayData;
+import sudoku.gui.model.DisplayDataChange;
+import sudoku.util.Observable;
+import sudoku.util.Observer;
+
 public class SudokuCell extends JLabel implements Observer {
 
     private static final long serialVersionUID = 1L;
@@ -59,13 +64,25 @@ public class SudokuCell extends JLabel implements Observer {
 
     @Override
     public void update(Observable observable, Object argument) {
+        assert observable instanceof DisplayData;
         assert data == ((DisplayData) observable);
-        assert argument != null;
+        assert argument instanceof DisplayDataChange;
         
-        Boolean newSudokuLoaded = (Boolean) argument;
-        if (newSudokuLoaded) {
+        switch ((DisplayDataChange) argument) {
+        case SUDOKU_LOADED:
+            /*
+             * This cell should no longer be updated as the sudoku it was part
+             * of got replaced by a new one.
+             */
             data.detachObserver(this);
-        } else {
+            break;
+            
+        case OPERATIONS_ENABLE_STATE:
+            getComponentPopupMenu().setEnabled(
+                    data.isOperationOnSudokuAllowed());
+            break;
+            
+        default:
             updateValue();
         }
     }
@@ -91,7 +108,7 @@ public class SudokuCell extends JLabel implements Observer {
         public CellPopupMenu(int numbers) {
             super();
             
-            for (int i = 1; i < numbers; i++) {
+            for (int i = 1; i <= numbers; i++) {
                 JMenuItem item = new JMenuItem(Integer.toString(i));
                 item.addActionListener(new ChangeCellActionListener(i));
                 add(item);
