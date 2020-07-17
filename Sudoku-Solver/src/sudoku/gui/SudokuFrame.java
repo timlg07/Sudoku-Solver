@@ -104,8 +104,10 @@ public class SudokuFrame extends JFrame implements Observer {
     }
     
     private void setEnableStates() {
+        boolean allowed = data.isOperationOnSudokuAllowed();
+        
         operationsOnSudoku.forEach(o -> {
-            o.setEnabled(data.isOperationOnSudokuAllowed());
+            o.setEnabled(allowed);
         });
     }
 
@@ -136,7 +138,7 @@ public class SudokuFrame extends JFrame implements Observer {
             content.add(boxPanel);
         }
         
-        /* Update the visible frame and its content. */
+        // Update the visible frame and its content.
         setContentPane(content);
         validate();
         pack();
@@ -146,7 +148,6 @@ public class SudokuFrame extends JFrame implements Observer {
     private class SudokuMenuBar extends JMenuBar {
         
         private static final long serialVersionUID = 1L;
-        private static final int CTRL = 2;
 
         SudokuMenuBar() {
             super();
@@ -163,30 +164,19 @@ public class SudokuFrame extends JFrame implements Observer {
             JMenuItem undo = new JMenuItem("Undo");
             JMenuItem suggest = new JMenuItem("Suggest Value");
             JMenuItem solve = new JMenuItem("Solve");
-
-            open.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, CTRL));
-            exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, CTRL));
-            undo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, CTRL));
-            suggest.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, CTRL));
-            solve.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, CTRL));
+            
+            // The modifier used to generate key strokes including the CTRL key.
+            final int ctrl = KeyEvent.CTRL_DOWN_MASK;
+            
+            open.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ctrl));
+            exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, ctrl));
+            undo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, ctrl));
+            suggest.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, ctrl));
+            solve.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, ctrl));
 
             open.addActionListener(new OpenFileActionListener());
-            
-            exit.addActionListener(new ActionListener() {
-                
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    SudokuFrame.super.dispose();
-                }
-            });
-            
-            undo.addActionListener(new ActionListener() {
-                
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    data.undo();
-                }
-            });
+            exit.addActionListener(e -> SudokuFrame.super.dispose());
+            undo.addActionListener(e -> data.undo());
 
             fileMenu.add(open);
             fileMenu.add(exit);
