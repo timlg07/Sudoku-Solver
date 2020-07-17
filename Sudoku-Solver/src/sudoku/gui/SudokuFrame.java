@@ -90,11 +90,11 @@ public class SudokuFrame extends JFrame implements Observer {
         assert argument instanceof DisplayDataChange;
         
         switch ((DisplayDataChange) argument) {
-        case SUDOKU_LOADED:
+        case NEW_SUDOKU:
             resetBoardView();
             /* Falls through so the states get reseted for a new sudoku. */
             
-        case OPERATIONS_ENABLE_STATE:
+        case OPERATIONS_ENABLED_STATE:
             setEnableStates();
             
         default:

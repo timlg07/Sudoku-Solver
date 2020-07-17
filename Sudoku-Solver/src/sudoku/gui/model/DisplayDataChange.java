@@ -5,26 +5,17 @@ public enum DisplayDataChange {
     /**
      * A completely new sudoku with a eventually different size was loaded.
      */
-    SUDOKU_LOADED,
+    NEW_SUDOKU,
     
     /**
-     * The current sudoku was changed by an edit directly from the user.
+     * One or more values of the current sudoku were changed by an edit directly
+     * from the user, a solver functionality such as suggest and solve, or by an
+     * undo operation.
      */
-    USER_CHANGE,
-    
-    /**
-     * The current sudoku was changed by a solver functionality such as suggest
-     * and solve.
-     */
-    SOLVER_CHANGE,
-    
-    /**
-     * The last edit (from the user or the solver) was reverted.
-     */
-    UNDO,
+    SUDOKU_VALUES,
     
     /**
      * All operations on the current sudoku were disabled or enabled.
      */
-    OPERATIONS_ENABLE_STATE;
+    OPERATIONS_ENABLED_STATE;
 }

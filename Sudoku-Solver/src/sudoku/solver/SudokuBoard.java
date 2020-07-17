@@ -241,7 +241,7 @@ public class SudokuBoard implements Board {
      * {@inheritDoc}
      */
     @Override
-    public Board clone() {
+    public SudokuBoard clone() {
         SudokuBoard copy;
         
         try {

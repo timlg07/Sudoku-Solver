@@ -53,7 +53,7 @@ public class DisplayData extends Observable {
             setChanged();
         }
 
-        notifyObservers(DisplayDataChange.USER_CHANGE);
+        notifyObservers(DisplayDataChange.SUDOKU_VALUES);
         clearChanged();
     }
     
@@ -95,6 +95,8 @@ public class DisplayData extends Observable {
             ParseException {
         Board intelligentBoard = SudokuFileParser.parseToBoard(sudokuFile);
         applyIntelligentBoard(intelligentBoard, true);
+        notifyObservers(DisplayDataChange.NEW_SUDOKU);
+        clearChanged();
     }
 
     public void applyIntelligentBoard(Board board, boolean isInitial) {
@@ -162,7 +164,7 @@ public class DisplayData extends Observable {
         System.out.println("----------");
         
         setChanged();
-        notifyObservers(DisplayDataChange.UNDO);
+        notifyObservers(DisplayDataChange.SUDOKU_VALUES);
         clearChanged();
     }
     
