@@ -78,7 +78,8 @@ public class SudokuFrame extends JFrame implements Observer {
          */
         getContentPane().setPreferredSize(PREF_SIZE);
         pack();
-
+        setLocationRelativeTo(null);
+        
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setVisible(true);
     }
@@ -139,6 +140,7 @@ public class SudokuFrame extends JFrame implements Observer {
         setContentPane(content);
         validate();
         pack();
+        setLocationRelativeTo(null);
     }
 
     private class SudokuMenuBar extends JMenuBar {
