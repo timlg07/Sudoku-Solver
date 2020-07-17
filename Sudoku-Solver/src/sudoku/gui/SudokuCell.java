@@ -40,6 +40,7 @@ public class SudokuCell extends JLabel implements Observer {
     private final int majorCoord;
     private final int minorCoord;
     private final DisplayData data;
+    private final JPopupMenu popupMenu;
     private int value;
 
     public SudokuCell(int major, int minor, DisplayData data) {
@@ -50,8 +51,10 @@ public class SudokuCell extends JLabel implements Observer {
         this.data = data;
         
         if (data.isCellModifiable(major, minor)) {
-            setComponentPopupMenu(new CellPopupMenu(data.getNumbers()));
+            popupMenu = new CellPopupMenu(data.getNumbers());
+            setComponentPopupMenu(popupMenu);
         } else {
+            popupMenu = null;
             setForeground(NOT_MODIFIABLE_FG);
         }
         setBorder(CELL_BORDER);
@@ -78,8 +81,7 @@ public class SudokuCell extends JLabel implements Observer {
             break;
             
         case OPERATIONS_ENABLED_STATE:
-            getComponentPopupMenu().setEnabled(
-                    data.isOperationOnSudokuAllowed());
+            updateEnabledOperations();
             break;
             
         default:
@@ -87,6 +89,12 @@ public class SudokuCell extends JLabel implements Observer {
         }
     }
     
+    private void updateEnabledOperations() {
+        if (popupMenu != null) {
+            popupMenu.setEnabled(data.isOperationOnSudokuAllowed());
+        }
+    }
+
     private void updateValue() {
         int newValue = data.getCell(majorCoord, minorCoord);
         if (value != newValue) {
@@ -109,11 +117,12 @@ public class SudokuCell extends JLabel implements Observer {
             super();
             
             for (int i = 1; i <= numbers; i++) {
-                add(Integer.toString(i)).addActionListener(
-                        new ChangeCellActionListener(i));
+                JMenuItem item = add(Integer.toString(i));
+                item.addActionListener(new ChangeCellActionListener(i));
             }
             
-            add("remove").addActionListener(
+            JMenuItem removeOption = add("remove");
+            removeOption.addActionListener(
                     new ChangeCellActionListener(DisplayData.UNSET_CELL));
         }
         
