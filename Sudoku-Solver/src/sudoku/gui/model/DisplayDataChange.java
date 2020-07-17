@@ -4,7 +4,7 @@ public enum DisplayDataChange {
     
     /**
      * A completely new sudoku with a eventually different size was loaded.
-     * A new sudoku is initially not locked.
+     * The new sudoku is initially not locked and may contain different values.
      */
     NEW_SUDOKU,
     
