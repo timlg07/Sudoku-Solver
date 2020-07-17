@@ -1,5 +1,6 @@
 package sudoku.gui;
 
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -55,7 +56,7 @@ public class SudokuFrame extends JFrame implements Observer {
         // The info text that initially explains why the window is empty.
         String info = "No sudoku file loaded. Press CTRL + O to open a file.";
         
-        // Apply basic CSS style to the info text for proper line wrapping.
+        // Apply basic inline CSS to the info text for proper line wrapping.
         add(new JLabel("<html><body style='width: 100%; text-align: center;'>" 
                 + info + "</body></html>", SwingConstants.CENTER));
 
@@ -93,15 +94,17 @@ public class SudokuFrame extends JFrame implements Observer {
         // Set the layout manager of the container which contains all boxes.
         content.setLayout(new GridLayout(boxCols, boxRows));
         
-        SudokuCell[][] cells = new SudokuCell[numbers][numbers];
-        
+        /*
+         * The sudoku is only displayed correctly when the box coordinate system
+         * is used. For other structures the index must be converted.
+         */
         assert DisplayData.STRUCT == Structure.BOX;
+        
         for (int boxNr = 0; boxNr < numbers; boxNr++) {
             JPanel boxPanel = new JPanel(innerLayout);
             boxPanel.setBorder(BOX_BORDER);
             for (int cellNr = 0; cellNr < numbers; cellNr++) {
-                SudokuCell cell = new SudokuCell(boxNr, cellNr, data);
-                cells[boxNr][cellNr] = cell;
+                Component cell = new SudokuCell(boxNr, cellNr, data);
                 boxPanel.add(cell);
             }
             content.add(boxPanel);
