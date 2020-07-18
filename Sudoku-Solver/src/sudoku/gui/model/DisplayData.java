@@ -4,6 +4,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import sudoku.io.SudokuFileParser;
 import sudoku.solver.Board;
 import sudoku.solver.EnforcedCell;
@@ -34,7 +39,7 @@ public class DisplayData extends Observable {
     private int numbers;
     private boolean isSudokuMutable;
     private final SudokuHistory history = new SudokuHistory(this);
-    private Thread currentCalculationThread = null;
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
     private final SudokuSolver solver;
     {
         solver = new SudokuBoardSolver();
@@ -108,6 +113,7 @@ public class DisplayData extends Observable {
             ParseException {
         Board intelligentBoard = SudokuFileParser.parseToBoard(sudokuFile);
         applyIntelligentBoard(intelligentBoard, true);
+        isSudokuMutable = true;
         notifyObservers(DisplayDataChange.NEW_SUDOKU);
     }
 
@@ -123,9 +129,6 @@ public class DisplayData extends Observable {
      * <p>
      * This method sets the changed flag of the {@link Observable} represented
      * by this DisplayData, but does not notify the observers.
-     * <p>
-     * After the execution of this method, operations on the sudoku are always
-     * allowed, until a operations locks the state (again).
      * 
      * @param board The intelligent board that will be used as unchecked board.
      *              Should not be {@code null}.
@@ -179,7 +182,6 @@ public class DisplayData extends Observable {
             boxRows = board.getBoxRows();
         }
         uncheckedBoard = newUncheckedBoard;
-        isSudokuMutable = true;
     }
     
     /**
@@ -248,8 +250,8 @@ public class DisplayData extends Observable {
         if (isSudokuMutable != lockEnabled) {
             setChanged();
             isSudokuMutable = lockEnabled;
-            notifyObservers(DisplayDataChange.SUDOKU_LOCK);
         }
+        notifyObservers(DisplayDataChange.SUDOKU_LOCK);
     }
     
     public void solve() throws InvalidSudokuException {
@@ -258,10 +260,27 @@ public class DisplayData extends Observable {
         
         Board intelligentBoard = generateIntelligentBoard();
         
+        Future<Board> solvedBoardPromise = executor.submit(() -> {
+            return solver.findFirstSolution(intelligentBoard);
+        });
+        
+        try {
+            applyIntelligentBoard(solvedBoardPromise.get(), false);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+        notifyObservers(DisplayDataChange.SUDOKU_VALUES);
+        setOperationOnSudokuAllowed(true);
+        
         /*
          * Execute the solve on a seperate Thread. This ensures that the Swing
          * EventDispatcher stays responsive and can process user interaction.
-         */
+         *
         currentCalculationThread = new Thread(() -> {
             Board solvedBoard = solver.findFirstSolution(intelligentBoard);
             applyIntelligentBoard(solvedBoard, false);
@@ -269,13 +288,13 @@ public class DisplayData extends Observable {
             setOperationOnSudokuAllowed(true);
             currentCalculationThread = null;
         });
-        currentCalculationThread.start();
+        currentCalculationThread.start();*/
     }
     
     @SuppressWarnings("deprecation")
     public void stopOngoingCalculations() {
-        if (currentCalculationThread != null) {
-            currentCalculationThread.stop();
+        if (executor != null) {
+            executor.shutdownNow();
         }
     }
 }
