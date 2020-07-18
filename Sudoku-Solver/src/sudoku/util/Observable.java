@@ -1,6 +1,7 @@
 package sudoku.util;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 
@@ -28,20 +29,25 @@ public abstract class Observable {
     }
     
     public void notifyObservers(Object argument) {
-        if (hasChanged()) {
-            Collection<Observer> observersToNotify = new LinkedList<>();
-            
-            /*
-             *  Store all currently attached observers, so that the monitor does
-             *  not have to be hold for the actual notify calls without causing 
-             *  a ConcurrentModificationException.
-             */
-            synchronized (this) {
-                observersToNotify.addAll(observers);
+        Collection<Observer> observersToNotify;
+
+        synchronized (this) {
+            if (!changed) {
+                /* Do not notify the observers if nothing has changed. */
+                return;
             }
+
+            /*
+             * Store all currently attached observers, so that the monitor does
+             * not have to be hold for the actual notify calls and that no
+             * ConcurrentModificationException occurs.
+             */
+            observersToNotify = new ArrayList<>(observers);
             
-            observersToNotify.forEach(o -> o.update(this, argument));
+            clearChanged();
         }
+
+        observersToNotify.forEach(o -> o.update(this, argument));
     }
     
     public synchronized boolean hasChanged() {

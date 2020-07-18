@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Arrays;
 
 import sudoku.io.SudokuFileParser;
 import sudoku.solver.Board;
@@ -46,12 +47,11 @@ public class DisplayData extends Observable {
         assertValueInRange(value);
         
         if (uncheckedBoard[major][minor] != value) {
-            uncheckedBoard[major][minor] = value;
             setChanged();
+            uncheckedBoard[major][minor] = value;
         }
 
         notifyObservers(DisplayDataChange.SUDOKU_VALUES);
-        clearChanged();
     }
     
     public boolean isCellModifiable(int major, int minor) {
@@ -100,7 +100,6 @@ public class DisplayData extends Observable {
         Board intelligentBoard = SudokuFileParser.parseToBoard(sudokuFile);
         applyIntelligentBoard(intelligentBoard, true);
         notifyObservers(DisplayDataChange.NEW_SUDOKU);
-        clearChanged();
     }
 
     /**
@@ -161,6 +160,8 @@ public class DisplayData extends Observable {
             }
         }
 
+        setChanged();
+        
         if (isInitial) {
             isConstant = newIsConstant;
             numbers = newSize;
@@ -169,7 +170,6 @@ public class DisplayData extends Observable {
         }
         uncheckedBoard = newUncheckedBoard;
         isSudokuMutable = true;
-        setChanged();
     }
     
     /**
@@ -219,7 +219,6 @@ public class DisplayData extends Observable {
         uncheckedBoard = history.undo();
         setChanged();
         notifyObservers(DisplayDataChange.SUDOKU_VALUES);
-        clearChanged();
     }
     
     /**
