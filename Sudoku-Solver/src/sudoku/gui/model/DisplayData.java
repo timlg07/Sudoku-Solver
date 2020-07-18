@@ -4,13 +4,15 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.Arrays;
-
 import sudoku.io.SudokuFileParser;
 import sudoku.solver.Board;
+import sudoku.solver.EnforcedCell;
+import sudoku.solver.EnforcedNumber;
 import sudoku.solver.InvalidSudokuException;
 import sudoku.solver.Structure;
 import sudoku.solver.SudokuBoard;
+import sudoku.solver.SudokuBoardSolver;
+import sudoku.solver.SudokuSolver;
 import sudoku.util.Observable;
 
 public class DisplayData extends Observable {
@@ -32,6 +34,13 @@ public class DisplayData extends Observable {
     private int numbers;
     private boolean isSudokuMutable;
     private final SudokuHistory history = new SudokuHistory(this);
+    private Thread currentCalculationThread = null;
+    private final SudokuSolver solver;
+    {
+        solver = new SudokuBoardSolver();
+        solver.addSaturator(new EnforcedNumber());
+        solver.addSaturator(new EnforcedCell());
+    }
 
     public int getCell(int major, int minor) {
         assertIndexInRange(major);
@@ -125,6 +134,7 @@ public class DisplayData extends Observable {
      *                  its size.
      */
     private void applyIntelligentBoard(Board board, boolean isInitial) {
+        System.out.println(Thread.currentThread().getName());
         if (board == null) {
             throw new IllegalArgumentException(
                     "Cannot apply \"null\" as Board.");
@@ -232,5 +242,40 @@ public class DisplayData extends Observable {
      */
     public boolean isOperationOnSudokuAllowed() {
         return isSudokuMutable;
+    }
+    
+    private void setOperationOnSudokuAllowed(boolean lockEnabled) {
+        if (isSudokuMutable != lockEnabled) {
+            setChanged();
+            isSudokuMutable = lockEnabled;
+            notifyObservers(DisplayDataChange.SUDOKU_LOCK);
+        }
+    }
+    
+    public void solve() throws InvalidSudokuException {
+        assertOperationsAllowed();
+        setOperationOnSudokuAllowed(false);
+        
+        Board intelligentBoard = generateIntelligentBoard();
+        
+        /*
+         * Execute the solve on a seperate Thread. This ensures that the Swing
+         * EventDispatcher stays responsive and can process user interaction.
+         */
+        currentCalculationThread = new Thread(() -> {
+            Board solvedBoard = solver.findFirstSolution(intelligentBoard);
+            applyIntelligentBoard(solvedBoard, false);
+            notifyObservers(DisplayDataChange.SUDOKU_VALUES);
+            setOperationOnSudokuAllowed(true);
+            currentCalculationThread = null;
+        });
+        currentCalculationThread.start();
+    }
+    
+    @SuppressWarnings("deprecation")
+    public void stopOngoingCalculations() {
+        if (currentCalculationThread != null) {
+            currentCalculationThread.stop();
+        }
     }
 }
