@@ -72,6 +72,8 @@ public class SudokuFrame extends JFrame implements Observer {
         // Apply basic inline CSS to the info text for proper line wrapping.
         add(new JLabel("<html><body style='width: 100%; text-align: center;'>" 
                 + info + "</body></html>", SwingConstants.CENTER));
+        
+        setTitle("Sudoku");
 
         /*
          * By setting the pref. size on the content pane, it won't be necessary
