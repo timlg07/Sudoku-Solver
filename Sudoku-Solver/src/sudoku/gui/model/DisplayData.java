@@ -25,8 +25,8 @@ public class DisplayData extends Observable {
      */
     public static final Structure STRUCT = Structure.BOX;
     
-    private volatile int[][] uncheckedBoard;
-    private volatile boolean[][] isConstant;
+    private int[][] uncheckedBoard;
+    private boolean[][] isConstant;
     private int boxRows;
     private int boxCols;
     private int numbers;
