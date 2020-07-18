@@ -4,10 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import sudoku.io.SudokuFileParser;
 import sudoku.solver.Board;
@@ -137,7 +133,6 @@ public class DisplayData extends Observable {
      *                  its size.
      */
     private void applyIntelligentBoard(Board board, boolean isInitial) {
-        System.out.println(Thread.currentThread().getName());
         if (board == null) {
             throw new IllegalArgumentException(
                     "Cannot apply \"null\" as Board.");
