@@ -216,8 +216,12 @@ public class DisplayData extends Observable {
     public void undo() {
         assertOperationsAllowed();
         
-        uncheckedBoard = history.undo();
-        setChanged();
+        int[][] lastBoard = history.undo();
+        if (lastBoard != null) {
+            setChanged();
+            uncheckedBoard = lastBoard;
+        }
+        
         notifyObservers(DisplayDataChange.SUDOKU_VALUES);
     }
     

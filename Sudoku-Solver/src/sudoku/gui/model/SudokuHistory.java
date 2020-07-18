@@ -33,28 +33,33 @@ public class SudokuHistory implements Observer {
     
     /**
      * Reverts the last saved edit and returns the state the sudoku was before
-     * this edit. If no edits were made to the sudoku the current sudoku gets 
-     * returned.
+     * this edit. 
+     * <p>
+     * The initial state of the sudoku always remains in the history. If the
+     * current state is the only and therefore initial state, {@code null} will
+     * be returned. If no sudoku is loaded {@code null} is returned as well.
      * 
      * @return The state of the sudoku after reverting the last change or 
-     *         {@code null} if no sudoku was loaded.
+     *         {@code null} if there are no changes that could be reverted.
      */
     public int[][] undo() {
-        if (sudokuHistoryData.isEmpty()) {
+        if (sudokuHistoryData.size() > 1) {
+            
+            // Revert the last change.
+            sudokuHistoryData.pop();
+            
+            /* 
+             * Return the new sudoku state, which is going to be used by 
+             * DisplayData and therefore will mutate. A clone of this state will
+             * be added automatically.
+             */
+            return sudokuHistoryData.pop();
+            
+        } else {
+            
+            // The stack is empty or contains only an initial state of a sudoku.
             return null;
         }
-        
-        if (sudokuHistoryData.size() > 1) {
-            /* Revert the last change if there are any changes saved. */
-            sudokuHistoryData.pop();
-        }
-        
-        /* 
-         * Return the new sudoku state, which is going to be used by DisplayData
-         * and therefore will mutate. A clone of this state will be added 
-         * automatically.
-         */
-        return sudokuHistoryData.pop();
     }
 
     @Override
