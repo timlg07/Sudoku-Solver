@@ -36,6 +36,8 @@ public class SudokuCell extends JLabel implements Observer {
     private static final int FONT_SIZE = 14;
     private static final Dimension PREF_SIZE 
             = new Dimension(FONT_SIZE * 3, FONT_SIZE * 3);
+    private static final Dimension MIN_SIZE 
+            = new Dimension(FONT_SIZE, FONT_SIZE);
     
     private final int majorCoord;
     private final int minorCoord;
@@ -59,6 +61,7 @@ public class SudokuCell extends JLabel implements Observer {
         }
         setBorder(CELL_BORDER);
         setPreferredSize(PREF_SIZE);
+        setMinimumSize(MIN_SIZE);
         setFont(getFont().deriveFont((float) FONT_SIZE));
         
         updateValue();

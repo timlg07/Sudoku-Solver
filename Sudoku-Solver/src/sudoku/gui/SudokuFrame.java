@@ -44,6 +44,7 @@ public class SudokuFrame extends JFrame implements Observer {
     
     private static final long serialVersionUID = 1L;
     private static final Dimension PREF_SIZE = new Dimension(400, 300);
+    private static final Dimension MIN_SIZE = new Dimension(240, 150);
     private static final Border BOX_BORDER 
             = BorderFactory.createBevelBorder(BevelBorder.LOWERED);
     
@@ -77,6 +78,8 @@ public class SudokuFrame extends JFrame implements Observer {
          * to restore the default behavior once a sudoku is loaded.
          */
         getContentPane().setPreferredSize(PREF_SIZE);
+        
+        setMinimumSize(MIN_SIZE);
         pack();
         setLocationRelativeTo(null);
         
