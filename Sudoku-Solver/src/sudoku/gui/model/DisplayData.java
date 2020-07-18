@@ -39,7 +39,7 @@ public class DisplayData extends Observable {
     private int numbers;
     private boolean isSudokuMutable;
     private final SudokuHistory history = new SudokuHistory(this);
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private Thread currentCalculationThread = null;
     private final SudokuSolver solver;
     {
         solver = new SudokuBoardSolver();
@@ -260,27 +260,10 @@ public class DisplayData extends Observable {
         
         Board intelligentBoard = generateIntelligentBoard();
         
-        Future<Board> solvedBoardPromise = executor.submit(() -> {
-            return solver.findFirstSolution(intelligentBoard);
-        });
-        
-        try {
-            applyIntelligentBoard(solvedBoardPromise.get(), false);
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        
-        notifyObservers(DisplayDataChange.SUDOKU_VALUES);
-        setOperationOnSudokuAllowed(true);
-        
         /*
          * Execute the solve on a seperate Thread. This ensures that the Swing
          * EventDispatcher stays responsive and can process user interaction.
-         *
+         */
         currentCalculationThread = new Thread(() -> {
             Board solvedBoard = solver.findFirstSolution(intelligentBoard);
             applyIntelligentBoard(solvedBoard, false);
@@ -288,13 +271,13 @@ public class DisplayData extends Observable {
             setOperationOnSudokuAllowed(true);
             currentCalculationThread = null;
         });
-        currentCalculationThread.start();*/
+        currentCalculationThread.start();
     }
     
     @SuppressWarnings("deprecation")
     public void stopOngoingCalculations() {
-        if (executor != null) {
-            executor.shutdownNow();
+        if (currentCalculationThread != null) {
+            currentCalculationThread.stop();
         }
     }
 }
