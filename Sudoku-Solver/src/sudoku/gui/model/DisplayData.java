@@ -250,18 +250,46 @@ public class DisplayData extends Observable {
     }
     
     public void solve() throws InvalidSudokuException {
+        asyncSolveHelper(false);
+    }
+    
+    public void suggestValue() throws InvalidSudokuException {
+        asyncSolveHelper(true);
+    }
+    
+    private void asyncSolveHelper(boolean applyOnlySuggestion) 
+            throws InvalidSudokuException {
         assertOperationsAllowed();
         setOperationOnSudokuAllowed(false);
         
-        Board intelligentBoard = generateIntelligentBoard();
+        Board initialBoard = generateIntelligentBoard();
         
         /*
          * Execute the solve on a seperate Thread. This ensures that the Swing
          * EventDispatcher stays responsive and can process user interaction.
          */
         currentCalculationThread = new Thread(() -> {
-            Board solvedBoard = solver.findFirstSolution(intelligentBoard);
-            applyIntelligentBoard(solvedBoard, false);
+            Board solvedBoard = solver.findFirstSolution(initialBoard);
+            Board requestedBoard;
+            if (applyOnlySuggestion) {
+                requestedBoard = initialBoard;
+                int[] suggestedCell = solvedBoard.getLastCellSet();
+                int suggestedValue = solvedBoard.getCell(
+                        Structure.ROW, suggestedCell[0], suggestedCell[1]);
+                try {
+                    requestedBoard.setCell(Structure.ROW, suggestedCell[0],
+                            suggestedCell[1], suggestedValue);
+                } catch (InvalidSudokuException e) {
+                    /* 
+                     * This should never happen since the cell was taken from
+                     * the fully solved sudoku board.
+                     */
+                    throw new AssertionError(e);
+                }
+            } else {
+                requestedBoard = solvedBoard;
+            }
+            applyIntelligentBoard(requestedBoard, false);
             notifyObservers(DisplayDataChange.SUDOKU_VALUES);
             setOperationOnSudokuAllowed(true);
             currentCalculationThread = null;

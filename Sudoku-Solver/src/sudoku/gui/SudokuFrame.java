@@ -266,6 +266,14 @@ public class SudokuFrame extends JFrame implements Observer {
                             "Invalid sudoku", JOptionPane.ERROR_MESSAGE);
                 }
             });
+            suggest.addActionListener(e -> {
+                try {
+                    data.suggestValue();
+                } catch (InvalidSudokuException e1) {
+                    new JOptionPane(
+                            "Invalid sudoku", JOptionPane.ERROR_MESSAGE);
+                }
+            });
 
             fileMenu.add(open);
             fileMenu.add(exit);
