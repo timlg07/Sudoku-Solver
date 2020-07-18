@@ -29,7 +29,7 @@ public class DisplayData extends Observable {
     private int boxRows;
     private int boxCols;
     private int numbers;
-    private boolean operationsEnabled;
+    private boolean isSudokuMutable;
     private final SudokuHistory history = new SudokuHistory(this);
 
     public int getCell(int major, int minor) {
@@ -40,6 +40,7 @@ public class DisplayData extends Observable {
     }
     
     public void setCell(int major, int minor, int value) {
+        assertOperationsAllowed();
         assertIndexInRange(major);
         assertIndexInRange(minor);
         assertValueInRange(value);
@@ -58,6 +59,13 @@ public class DisplayData extends Observable {
         assertIndexInRange(minor);
         
         return !isConstant[major][minor];
+    }
+    
+    private void assertOperationsAllowed() {
+        if (!isSudokuMutable) {
+            throw new IllegalStateException(
+                    "The sudoku is currently not mutable");
+        }
     }
     
     private void assertIndexInRange(int index) {
@@ -160,7 +168,7 @@ public class DisplayData extends Observable {
             boxRows = board.getBoxRows();
         }
         uncheckedBoard = newUncheckedBoard;
-        operationsEnabled = true;
+        isSudokuMutable = true;
         setChanged();
     }
     
@@ -206,6 +214,8 @@ public class DisplayData extends Observable {
      * Reverts the last change of the displayed data and notifies the observers.
      */
     public void undo() {
+        assertOperationsAllowed();
+        
         uncheckedBoard = history.undo();
         setChanged();
         notifyObservers(DisplayDataChange.SUDOKU_VALUES);
@@ -218,6 +228,6 @@ public class DisplayData extends Observable {
      * @return {@code true} if operations on the sudoku are currently allowed.
      */
     public boolean isOperationOnSudokuAllowed() {
-        return operationsEnabled;
+        return isSudokuMutable;
     }
 }
