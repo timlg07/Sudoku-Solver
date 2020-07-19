@@ -275,16 +275,30 @@ public class SudokuFrame extends JFrame implements Observer {
                 try {
                     data.solve();
                 } catch (InvalidSudokuException e1) {
-                    new JOptionPane(
-                            "Invalid sudoku", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Cannot solve an invalid sudoku.",
+                            "Invalid sudoku",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             });
             suggest.addActionListener(e -> {
-                try {
-                    data.suggestValue();
-                } catch (InvalidSudokuException e1) {
-                    new JOptionPane(
-                            "Invalid sudoku", JOptionPane.ERROR_MESSAGE);
+                if (data.getAmountOfUnsetCells() < 1) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Cannot suggest a value if all cells are set.",
+                            "No empty cells",
+                            JOptionPane.ERROR_MESSAGE);
+                } else {
+                    try {
+                        data.suggestValue();
+                    } catch (InvalidSudokuException exc) {
+                        JOptionPane.showMessageDialog(
+                                this,
+                                "Cannot suggest a value on an invalid sudoku.",
+                                "Invalid sudoku",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             });
 

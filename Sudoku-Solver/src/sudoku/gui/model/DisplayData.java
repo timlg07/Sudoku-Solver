@@ -34,6 +34,7 @@ public class DisplayData extends Observable {
     private int boxCols;
     private int numbers;
     private boolean isSudokuMutable;
+    private int amountOfUnsetCells = 0;
     private final SudokuHistory history = new SudokuHistory(this);
     private Thread currentCalculationThread = null;
     private final SudokuSolver solver;
@@ -57,6 +58,12 @@ public class DisplayData extends Observable {
         assertValueInRange(value);
         
         if (uncheckedBoard[major][minor] != value) {
+            if (uncheckedBoard[major][minor] == UNSET_CELL) {
+                amountOfUnsetCells--;
+            } else if (value == UNSET_CELL) {
+                amountOfUnsetCells++;
+            }
+            
             setChanged();
             uncheckedBoard[major][minor] = value;
         }
@@ -102,6 +109,10 @@ public class DisplayData extends Observable {
 
     public int getNumbers() {
         return numbers;
+    }
+    
+    public int getAmountOfUnsetCells() {
+        return amountOfUnsetCells;
     }
     
     public void loadSudokuFromFile(File sudokuFile) 
@@ -151,6 +162,7 @@ public class DisplayData extends Observable {
         
         int newSize = board.getNumbers();
         int[][] newUncheckedBoard = new int[newSize][newSize];
+        int newAmountOfUnsetCells = 0;
         boolean[][] newIsConstant = null;
         if (isInitial) {
             /* Only needed if constants can be overwritten. */
@@ -163,6 +175,7 @@ public class DisplayData extends Observable {
                 boolean isSet = (cell != Board.UNSET_CELL);
                 
                 newUncheckedBoard[major][minor] = (isSet ? cell : UNSET_CELL);
+                newAmountOfUnsetCells += (isSet ? 0 : 1);
                 
                 if (isInitial) {
                     assert newIsConstant != null;
@@ -180,6 +193,7 @@ public class DisplayData extends Observable {
             boxRows = board.getBoxRows();
         }
         uncheckedBoard = newUncheckedBoard;
+        amountOfUnsetCells = newAmountOfUnsetCells;
     }
     
     /**
@@ -257,6 +271,11 @@ public class DisplayData extends Observable {
     }
     
     public void suggestValue() throws InvalidSudokuException {
+        if (amountOfUnsetCells < 1) {
+            throw new IllegalStateException(
+                    "Cannot suggest a value if the sudoku is already solved.");
+        }
+        
         asyncSolveHelper(true);
     }
     
