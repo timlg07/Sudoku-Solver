@@ -67,15 +67,25 @@ public class SudokuHistory implements Observer {
         assert observable instanceof DisplayData;
         assert argument instanceof DisplayDataChange;
         
-        if (((DisplayDataChange) argument) == DisplayDataChange.NEW_SUDOKU) {
+        switch ((DisplayDataChange) argument) {
+        case NEW_SUDOKU:
             /*
              * Remove all states of the previous sudoku before adding states of
              * the new one.
              */
             sudokuHistoryData.clear();
+            /*
+             * Fall through because the initial state of the new sudoku should
+             * be saved.
+             */
+        case SUDOKU_VALUES:
+            /* Save a copy of the currently displayed board. */
+            saveSudoku(((DisplayData) observable).cloneUncheckedBoard());
+            break;
+            
+        default:
+            /* The history does only care about altered sudokus. */
+            break;
         }
-        
-        /* Save a copy of the currently displayed board. */
-        saveSudoku(((DisplayData) observable).cloneUncheckedBoard());
     }
 }
