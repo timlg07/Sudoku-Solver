@@ -107,6 +107,9 @@ public class DisplayData extends Observable {
     public void loadSudokuFromFile(File sudokuFile) 
             throws InvalidSudokuException, FileNotFoundException, IOException, 
             ParseException {
+        // Stop all calculations on the previous sudoku which will be replaced.
+        stopOngoingCalculation();
+        
         Board intelligentBoard = SudokuFileParser.parseToBoard(sudokuFile);
         applyIntelligentBoard(intelligentBoard, true);
         isSudokuMutable = true;
@@ -298,7 +301,7 @@ public class DisplayData extends Observable {
     }
     
     @SuppressWarnings("deprecation")
-    public void stopOngoingCalculations() {
+    public void stopOngoingCalculation() {
         if (currentCalculationThread != null) {
             currentCalculationThread.stop();
         }

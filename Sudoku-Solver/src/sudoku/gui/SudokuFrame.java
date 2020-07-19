@@ -7,6 +7,8 @@ import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -127,6 +129,17 @@ public class SudokuFrame extends JFrame implements Observer {
         setLocationRelativeTo(null);
         
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                /*
+                 * The result of the current calculation is not needed because
+                 * the view that would display the updated data model is closed.
+                 */
+                data.stopOngoingCalculation();
+            }
+        });
+        
         setVisible(true);
     }
     
