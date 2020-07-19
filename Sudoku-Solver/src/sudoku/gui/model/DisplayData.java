@@ -1,11 +1,5 @@
 package sudoku.gui.model;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.text.ParseException;
-
-import sudoku.io.SudokuFileParser;
 import sudoku.solver.Board;
 import sudoku.solver.EnforcedCell;
 import sudoku.solver.EnforcedNumber;
@@ -33,15 +27,32 @@ public class DisplayData extends Observable {
     private int boxRows;
     private int boxCols;
     private int numbers;
-    private boolean isSudokuMutable;
-    private int amountOfUnsetCells = 0;
+    private int amountOfUnsetCells;
     private final SudokuHistory history = new SudokuHistory(this);
-    private Thread currentCalculationThread = null;
     private final SudokuSolver solver;
-    {
+    
+    public DisplayData(Board intelligentBoard) {
         solver = new SudokuBoardSolver();
         solver.addSaturator(new EnforcedNumber());
         solver.addSaturator(new EnforcedCell());
+        
+        numbers = intelligentBoard.getNumbers();
+        boxCols = intelligentBoard.getBoxColumns();
+        boxRows = intelligentBoard.getBoxRows();
+        uncheckedBoard = new int[numbers][numbers];
+        amountOfUnsetCells = 0;
+        isConstant = new boolean[numbers][numbers];
+        
+        for (int major = 0; major < numbers; major++) {
+            for (int minor = 0; minor < numbers; minor++) {
+                int cell = intelligentBoard.getCell(STRUCT, major, minor);
+                boolean isSet = (cell != Board.UNSET_CELL);
+                
+                uncheckedBoard[major][minor] = (isSet ? cell : UNSET_CELL);
+                amountOfUnsetCells += (isSet ? 0 : 1);
+                isConstant[major][minor] = isSet;
+            }
+        }
     }
 
     public int getCell(int major, int minor) {
@@ -52,7 +63,6 @@ public class DisplayData extends Observable {
     }
     
     public void setCell(int major, int minor, int value) {
-        assertOperationsAllowed();
         assertIndexInRange(major);
         assertIndexInRange(minor);
         assertValueInRange(value);
@@ -76,13 +86,6 @@ public class DisplayData extends Observable {
         assertIndexInRange(minor);
         
         return !isConstant[major][minor];
-    }
-    
-    private void assertOperationsAllowed() {
-        if (!isSudokuMutable) {
-            throw new IllegalStateException(
-                    "The sudoku is currently not mutable");
-        }
     }
     
     private void assertIndexInRange(int index) {
@@ -122,23 +125,14 @@ public class DisplayData extends Observable {
             return false;
         }
     }
-    
-    public void loadSudokuFromFile(File sudokuFile) 
-            throws InvalidSudokuException, FileNotFoundException, IOException, 
-            ParseException {
-        // Stop all calculations on the previous sudoku which will be replaced.
-        stopOngoingCalculation();
-        
-        Board intelligentBoard = SudokuFileParser.parseToBoard(sudokuFile);
-        applyIntelligentBoard(intelligentBoard, true);
-        isSudokuMutable = true;
-        notifyObservers(DisplayDataChange.NEW_SUDOKU);
-    }
 
-    /**
+    /** TODO: Update JavaDoc:
+     *      - same size or throw
+     *      - only setting not unsetting
+     *      - not changing constants
      * Applies the given intelligent board to the current unchecked board by
      * transferring all values from the intelligent board to a new array and
-     * then updating the reference of the unchecked board to the new array.</p>
+     * then updating the reference of the unchecked board to the new array.
      * <p>
      * If the intelligent board is marked as initial board, it is allowed to
      * change the sudokus size. It also resets the constant markers and then 
@@ -154,54 +148,21 @@ public class DisplayData extends Observable {
      *                  is allowed to overwrite the sudokus constant markers and
      *                  its size.
      */
-    private void applyIntelligentBoard(Board board, boolean isInitial) {
-        if (board == null) {
-            throw new IllegalArgumentException(
-                    "Cannot apply \"null\" as Board.");
-        }
-
-        if ((!isInitial) && ((boxCols != board.getBoxColumns()) 
-                              || (boxRows != board.getBoxRows()))) {
-            throw new IllegalArgumentException(
-                      "The intelligent board has a different size than the "
-                    + "current unchecked board and is not an initial board "
-                    + "which could overwrite the size");
-        }
+    private void applyIntelligentBoard(Board board) {
+        assert board != null;
+        assert boxCols == board.getBoxColumns();
+        assert boxRows == board.getBoxRows();
         
-        int newSize = board.getNumbers();
-        int[][] newUncheckedBoard = new int[newSize][newSize];
-        int newAmountOfUnsetCells = 0;
-        boolean[][] newIsConstant = null;
-        if (isInitial) {
-            /* Only needed if constants can be overwritten. */
-            newIsConstant = new boolean[newSize][newSize];
-        }
-        
-        for (int major = 0; major < newSize; major++) {
-            for (int minor = 0; minor < newSize; minor++) {
-                int cell = board.getCell(STRUCT, major, minor);
-                boolean isSet = (cell != Board.UNSET_CELL);
+        for (int major = 0; major < numbers; major++) {
+            for (int minor = 0; minor < numbers; minor++) {
+                int cellValue = board.getCell(STRUCT, major, minor);
+                boolean isSet = (cellValue != Board.UNSET_CELL);
                 
-                newUncheckedBoard[major][minor] = (isSet ? cell : UNSET_CELL);
-                newAmountOfUnsetCells += (isSet ? 0 : 1);
-                
-                if (isInitial) {
-                    assert newIsConstant != null;
-                    newIsConstant[major][minor] = isSet;
+                if (isSet && (cellValue != uncheckedBoard[major][minor])) {
+                    setCell(major, minor, cellValue);
                 }
             }
         }
-
-        setChanged();
-        
-        if (isInitial) {
-            isConstant = newIsConstant;
-            numbers = newSize;
-            boxCols = board.getBoxColumns();
-            boxRows = board.getBoxRows();
-        }
-        uncheckedBoard = newUncheckedBoard;
-        amountOfUnsetCells = newAmountOfUnsetCells;
     }
     
     /**
@@ -246,8 +207,6 @@ public class DisplayData extends Observable {
      * Reverts the last change of the displayed data and notifies the observers.
      */
     public void undo() {
-        assertOperationsAllowed();
-        
         int[][] lastBoard = history.undo();
         if (lastBoard != null) {
             setChanged();
@@ -255,23 +214,6 @@ public class DisplayData extends Observable {
         }
         
         notifyObservers(DisplayDataChange.SUDOKU_VALUES);
-    }
-    
-    /**
-     * Returns whether an operation on the sudoku is currently allowed or not.
-     * 
-     * @return {@code true} if operations on the sudoku are currently allowed.
-     */
-    public boolean isOperationOnSudokuAllowed() {
-        return isSudokuMutable;
-    }
-    
-    private void setOperationOnSudokuAllowed(boolean lockEnabled) {
-        if (isSudokuMutable != lockEnabled) {
-            setChanged();
-            isSudokuMutable = lockEnabled;
-        }
-        notifyObservers(DisplayDataChange.SUDOKU_LOCK);
     }
     
     public void solve() throws InvalidSudokuException {
@@ -289,16 +231,14 @@ public class DisplayData extends Observable {
     
     private void asyncSolveHelper(boolean applyOnlySuggestion) 
             throws InvalidSudokuException {
-        assertOperationsAllowed();
-        setOperationOnSudokuAllowed(false);
         
         Board initialBoard = generateIntelligentBoard();
         
         /*
          * Execute the solve on a seperate Thread. This ensures that the Swing
          * EventDispatcher stays responsive and can process user interaction.
+         //currentCalculationThread = new Thread(() -> {
          */
-        currentCalculationThread = new Thread(() -> {
             Board solvedBoard = solver.findFirstSolution(initialBoard);
             Board requestedBoard;
             if (applyOnlySuggestion) {
@@ -319,18 +259,16 @@ public class DisplayData extends Observable {
             } else {
                 requestedBoard = solvedBoard;
             }
-            applyIntelligentBoard(requestedBoard, false);
+            applyIntelligentBoard(requestedBoard);
             notifyObservers(DisplayDataChange.SUDOKU_VALUES);
-            setOperationOnSudokuAllowed(true);
-            currentCalculationThread = null;
-        });
-        currentCalculationThread.start();
+            // currentCalculationThread = null;
+        //currentCalculationThread.start();
     }
     
-    @SuppressWarnings("deprecation")
+    /*@SuppressWarnings("deprecation")
     public void stopOngoingCalculation() {
         if (currentCalculationThread != null) {
             currentCalculationThread.stop();
         }
-    }
+    }*/
 }

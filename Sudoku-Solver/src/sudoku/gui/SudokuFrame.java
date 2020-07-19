@@ -33,6 +33,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import sudoku.gui.model.DisplayData;
 import sudoku.gui.model.DisplayDataChange;
+import sudoku.io.SudokuFileParser;
+import sudoku.solver.Board;
 import sudoku.solver.InvalidSudokuException;
 import sudoku.solver.Structure;
 import sudoku.util.Observable;
@@ -72,10 +74,10 @@ public class SudokuFrame extends JFrame implements Observer {
             = new FileNameExtensionFilter("Sudoku File", "sud");
     
     /**
-     * The data model which stores the displayed sudoku and provides operations
-     * on it.
+     * The data model which stores the currently displayed sudoku and provides
+     * operations on it.
      */
-    private final DisplayData data;
+    private DisplayData currentData;
     
     /**
      * A collection of menu items that will perform operations on the current 
@@ -92,22 +94,13 @@ public class SudokuFrame extends JFrame implements Observer {
     private final JFileChooser fileChooser = new JFileChooser();
 
     /**
-     * Constructs and shows a SudokuFrame window that will always display the
-     * current state of the given dataModel by observing it as an 
-     * {@link sudoku.util.Observer}. The controller included in this frame will
-     * perform the operations on the dataModel the user requests.
-     * 
-     * @param dataModel The data model that stores and manages the displayed 
-     *                  data.
+     * Constructs and shows a SudokuFrame window (...) TODO: rewrite JavaDoc
      */
-    public SudokuFrame(DisplayData dataModel) {
-        data = dataModel;
-        data.attachObserver(this);
-
+    public SudokuFrame() {
         fileChooser.setFileFilter(SUDOKU_FILE_FILTER);
         
         setJMenuBar(new SudokuMenuBar());
-        setEnableStates();
+        setEnableStates(true);
         
         // The info text that initially explains why the window is empty.
         String info = "No sudoku file loaded. Press CTRL + O to open a file.";
@@ -136,7 +129,8 @@ public class SudokuFrame extends JFrame implements Observer {
                  * The result of the current calculation is not needed because
                  * the view that would display the updated data model is closed.
                  */
-                data.stopOngoingCalculation();
+                //currentData.stopOngoingCalculation();
+                //TODO: Implement new Thread handling
             }
         });
         
@@ -152,7 +146,7 @@ public class SudokuFrame extends JFrame implements Observer {
     @Override
     public void update(Observable observable, Object argument) {
         assert observable instanceof DisplayData;
-        assert data == ((DisplayData) observable);
+        assert currentData == ((DisplayData) observable);
         assert argument instanceof DisplayDataChange;
 
         switch ((DisplayDataChange) argument) {
@@ -160,13 +154,13 @@ public class SudokuFrame extends JFrame implements Observer {
             resetBoardView();
             /* Falls through so the states get reseted for a new sudoku. */
         case SUDOKU_LOCK:
-            setEnableStates();
+            setEnableStates((Boolean)null); //TODO: Implement with PropertyChange
             break;
             
         default:
-            if (data.getAmountOfUnsetCells() == 0) {
+            if (currentData.getAmountOfUnsetCells() == 0) {
                 JOptionPane.showMessageDialog(this, 
-                        (data.isSolution() 
+                        (currentData.isSolution() 
                                 ? "You solved it!" 
                                 : "This looks wrong..."));
             }
@@ -180,9 +174,7 @@ public class SudokuFrame extends JFrame implements Observer {
      * current sudoku, to the state stored in the data model. This should lock
      * (or unlock) all operations on the current sudoku.
      */
-    private void setEnableStates() {
-        boolean allowed = data.isOperationOnSudokuAllowed();
-        
+    private void setEnableStates(boolean allowed) {
         operationsOnSudoku.forEach(o -> {
             o.setEnabled(allowed);
         });
@@ -197,9 +189,12 @@ public class SudokuFrame extends JFrame implements Observer {
      * relocate the frame.
      */
     private void resetBoardView() {
-        int numbers = data.getNumbers();
-        int boxRows = data.getBoxRows();
-        int boxCols = data.getBoxCols();
+        // A data model needs to be loaded. 
+        assert currentData != null;
+        
+        int numbers = currentData.getNumbers();
+        int boxRows = currentData.getBoxRows();
+        int boxCols = currentData.getBoxCols();
         Container content = new Container();
         LayoutManager outerLayout = new GridLayout(boxCols, boxRows);
         LayoutManager innerLayout = new GridLayout(boxRows, boxCols);
@@ -217,7 +212,7 @@ public class SudokuFrame extends JFrame implements Observer {
             JPanel boxPanel = new JPanel(innerLayout);
             boxPanel.setBorder(BOX_BORDER);
             for (int cellNr = 0; cellNr < numbers; cellNr++) {
-                boxPanel.add(new SudokuCell(boxNr, cellNr, data));
+                boxPanel.add(new SudokuCell(boxNr, cellNr, currentData));
             }
             content.add(boxPanel);
         }
@@ -276,10 +271,10 @@ public class SudokuFrame extends JFrame implements Observer {
 
             open.addActionListener(new OpenFileActionListener());
             exit.addActionListener(e -> SudokuFrame.super.dispose());
-            undo.addActionListener(e -> data.undo());
+            undo.addActionListener(e -> currentData.undo());
             solve.addActionListener(e -> {
                 try {
-                    data.solve();
+                    currentData.solve();
                 } catch (InvalidSudokuException e1) {
                     JOptionPane.showMessageDialog(
                             this,
@@ -289,7 +284,7 @@ public class SudokuFrame extends JFrame implements Observer {
                 }
             });
             suggest.addActionListener(e -> {
-                if (data.getAmountOfUnsetCells() < 1) {
+                if (currentData.getAmountOfUnsetCells() < 1) {
                     JOptionPane.showMessageDialog(
                             this,
                             "Cannot suggest a value if all cells are set.",
@@ -297,7 +292,7 @@ public class SudokuFrame extends JFrame implements Observer {
                             JOptionPane.ERROR_MESSAGE);
                 } else {
                     try {
-                        data.suggestValue();
+                        currentData.suggestValue();
                     } catch (InvalidSudokuException exc) {
                         JOptionPane.showMessageDialog(
                                 this,
@@ -331,7 +326,10 @@ public class SudokuFrame extends JFrame implements Observer {
             if (fileChooserState == JFileChooser.APPROVE_OPTION) {
                 File sudokuFile = fileChooser.getSelectedFile();
                 try {
-                    data.loadSudokuFromFile(sudokuFile);
+                    Board board = SudokuFileParser.parseToBoard(sudokuFile);
+                    currentData = new DisplayData(board);
+                    resetBoardView(); //TODO: Manipulation of the view from the controller... allowed?
+                    currentData.attachObserver(SudokuFrame.this);
                 } catch (InvalidSudokuException | IOException 
                         | ParseException exc) {
                     JOptionPane.showMessageDialog(

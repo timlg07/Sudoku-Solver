@@ -84,7 +84,7 @@ public class SudokuCell extends JLabel implements Observer {
             break;
             
         case SUDOKU_LOCK:
-            updatePopupMenuEnabled();
+            updatePopupMenuEnabled((Boolean)null); //TODO: Implement with PropertyChange
             break;
             
         default:
@@ -92,8 +92,8 @@ public class SudokuCell extends JLabel implements Observer {
         }
     }
     
-    private void updatePopupMenuEnabled() {
-        if (data.isOperationOnSudokuAllowed()) {
+    private void updatePopupMenuEnabled(boolean enabled) {
+        if (enabled) {
             setComponentPopupMenu(popupMenu);
         } else {
             setComponentPopupMenu(null);
