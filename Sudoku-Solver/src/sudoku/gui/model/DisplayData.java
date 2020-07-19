@@ -115,6 +115,14 @@ public class DisplayData extends Observable {
         return amountOfUnsetCells;
     }
     
+    public boolean isSolution() {
+        try {
+            return generateIntelligentBoard().isSolution();
+        } catch (InvalidSudokuException e) {
+            return false;
+        }
+    }
+    
     public void loadSudokuFromFile(File sudokuFile) 
             throws InvalidSudokuException, FileNotFoundException, IOException, 
             ParseException {

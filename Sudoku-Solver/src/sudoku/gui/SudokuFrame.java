@@ -164,7 +164,13 @@ public class SudokuFrame extends JFrame implements Observer {
             break;
             
         default:
-            /* No updates necessary, the cells get individually updated. */
+            if (data.getAmountOfUnsetCells() == 0) {
+                JOptionPane.showMessageDialog(this, 
+                        (data.isSolution() 
+                                ? "You solved it!" 
+                                : "This looks wrong..."));
+            }
+            // No further updates necessary, the cells get individually updated.
             break;
         }
     }
