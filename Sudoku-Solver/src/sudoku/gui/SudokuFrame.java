@@ -7,6 +7,8 @@ import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -127,6 +129,17 @@ public class SudokuFrame extends JFrame implements Observer {
         setLocationRelativeTo(null);
         
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                /*
+                 * The result of the current calculation is not needed because
+                 * the view that would display the updated data model is closed.
+                 */
+                data.stopOngoingCalculation();
+            }
+        });
+        
         setVisible(true);
     }
     
@@ -141,13 +154,14 @@ public class SudokuFrame extends JFrame implements Observer {
         assert observable instanceof DisplayData;
         assert data == ((DisplayData) observable);
         assert argument instanceof DisplayDataChange;
-        
+
         switch ((DisplayDataChange) argument) {
         case NEW_SUDOKU:
             resetBoardView();
             /* Falls through so the states get reseted for a new sudoku. */
         case SUDOKU_LOCK:
             setEnableStates();
+            break;
             
         default:
             /* No updates necessary, the cells get individually updated. */
@@ -257,6 +271,22 @@ public class SudokuFrame extends JFrame implements Observer {
             open.addActionListener(new OpenFileActionListener());
             exit.addActionListener(e -> SudokuFrame.super.dispose());
             undo.addActionListener(e -> data.undo());
+            solve.addActionListener(e -> {
+                try {
+                    data.solve();
+                } catch (InvalidSudokuException e1) {
+                    new JOptionPane(
+                            "Invalid sudoku", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+            suggest.addActionListener(e -> {
+                try {
+                    data.suggestValue();
+                } catch (InvalidSudokuException e1) {
+                    new JOptionPane(
+                            "Invalid sudoku", JOptionPane.ERROR_MESSAGE);
+                }
+            });
 
             fileMenu.add(open);
             fileMenu.add(exit);

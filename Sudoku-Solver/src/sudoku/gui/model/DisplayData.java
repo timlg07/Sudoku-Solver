@@ -4,13 +4,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.Arrays;
 
 import sudoku.io.SudokuFileParser;
 import sudoku.solver.Board;
+import sudoku.solver.EnforcedCell;
+import sudoku.solver.EnforcedNumber;
 import sudoku.solver.InvalidSudokuException;
 import sudoku.solver.Structure;
 import sudoku.solver.SudokuBoard;
+import sudoku.solver.SudokuBoardSolver;
+import sudoku.solver.SudokuSolver;
 import sudoku.util.Observable;
 
 public class DisplayData extends Observable {
@@ -32,6 +35,13 @@ public class DisplayData extends Observable {
     private int numbers;
     private boolean isSudokuMutable;
     private final SudokuHistory history = new SudokuHistory(this);
+    private Thread currentCalculationThread = null;
+    private final SudokuSolver solver;
+    {
+        solver = new SudokuBoardSolver();
+        solver.addSaturator(new EnforcedNumber());
+        solver.addSaturator(new EnforcedCell());
+    }
 
     public int getCell(int major, int minor) {
         assertIndexInRange(major);
@@ -97,8 +107,12 @@ public class DisplayData extends Observable {
     public void loadSudokuFromFile(File sudokuFile) 
             throws InvalidSudokuException, FileNotFoundException, IOException, 
             ParseException {
+        // Stop all calculations on the previous sudoku which will be replaced.
+        stopOngoingCalculation();
+        
         Board intelligentBoard = SudokuFileParser.parseToBoard(sudokuFile);
         applyIntelligentBoard(intelligentBoard, true);
+        isSudokuMutable = true;
         notifyObservers(DisplayDataChange.NEW_SUDOKU);
     }
 
@@ -114,9 +128,6 @@ public class DisplayData extends Observable {
      * <p>
      * This method sets the changed flag of the {@link Observable} represented
      * by this DisplayData, but does not notify the observers.
-     * <p>
-     * After the execution of this method, operations on the sudoku are always
-     * allowed, until a operations locks the state (again).
      * 
      * @param board The intelligent board that will be used as unchecked board.
      *              Should not be {@code null}.
@@ -169,7 +180,6 @@ public class DisplayData extends Observable {
             boxRows = board.getBoxRows();
         }
         uncheckedBoard = newUncheckedBoard;
-        isSudokuMutable = true;
     }
     
     /**
@@ -232,5 +242,68 @@ public class DisplayData extends Observable {
      */
     public boolean isOperationOnSudokuAllowed() {
         return isSudokuMutable;
+    }
+    
+    private void setOperationOnSudokuAllowed(boolean lockEnabled) {
+        if (isSudokuMutable != lockEnabled) {
+            setChanged();
+            isSudokuMutable = lockEnabled;
+        }
+        notifyObservers(DisplayDataChange.SUDOKU_LOCK);
+    }
+    
+    public void solve() throws InvalidSudokuException {
+        asyncSolveHelper(false);
+    }
+    
+    public void suggestValue() throws InvalidSudokuException {
+        asyncSolveHelper(true);
+    }
+    
+    private void asyncSolveHelper(boolean applyOnlySuggestion) 
+            throws InvalidSudokuException {
+        assertOperationsAllowed();
+        setOperationOnSudokuAllowed(false);
+        
+        Board initialBoard = generateIntelligentBoard();
+        
+        /*
+         * Execute the solve on a seperate Thread. This ensures that the Swing
+         * EventDispatcher stays responsive and can process user interaction.
+         */
+        currentCalculationThread = new Thread(() -> {
+            Board solvedBoard = solver.findFirstSolution(initialBoard);
+            Board requestedBoard;
+            if (applyOnlySuggestion) {
+                requestedBoard = initialBoard;
+                int[] suggestedCell = solvedBoard.getLastCellSet();
+                int suggestedValue = solvedBoard.getCell(
+                        Structure.ROW, suggestedCell[0], suggestedCell[1]);
+                try {
+                    requestedBoard.setCell(Structure.ROW, suggestedCell[0],
+                            suggestedCell[1], suggestedValue);
+                } catch (InvalidSudokuException e) {
+                    /* 
+                     * This should never happen since the cell was taken from
+                     * the fully solved sudoku board.
+                     */
+                    throw new AssertionError(e);
+                }
+            } else {
+                requestedBoard = solvedBoard;
+            }
+            applyIntelligentBoard(requestedBoard, false);
+            notifyObservers(DisplayDataChange.SUDOKU_VALUES);
+            setOperationOnSudokuAllowed(true);
+            currentCalculationThread = null;
+        });
+        currentCalculationThread.start();
+    }
+    
+    @SuppressWarnings("deprecation")
+    public void stopOngoingCalculation() {
+        if (currentCalculationThread != null) {
+            currentCalculationThread.stop();
+        }
     }
 }
