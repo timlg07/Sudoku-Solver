@@ -37,6 +37,7 @@ import sudoku.io.SudokuFileParser;
 import sudoku.solver.Board;
 import sudoku.solver.InvalidSudokuException;
 import sudoku.solver.Structure;
+import sudoku.solver.UnsolvableSudokuException;
 import sudoku.util.Observable;
 import sudoku.util.Observer;
 
@@ -45,7 +46,7 @@ import sudoku.util.Observer;
  * It contains a {@link SudokuMenuBar} and, if a file was loaded, an editable
  * sudoku consisting of {@link SudokuCell}s.
  */
-public class SudokuFrame extends JFrame implements Observer {
+public class SudokuFrame extends JFrame {
     
     private static final long serialVersionUID = 1L;
     
@@ -135,38 +136,6 @@ public class SudokuFrame extends JFrame implements Observer {
         });
         
         setVisible(true);
-    }
-    
-    /**
-     * {@inheritDoc}
-     * Updates the view if a new sudoku is loaded. Only updates the enabled 
-     * state of buttons that can perform operations on the current sudoku if the
-     * sudoku-lock was changed.
-     */
-    @Override
-    public void update(Observable observable, Object argument) {
-        assert observable instanceof DisplayData;
-        assert currentData == ((DisplayData) observable);
-        assert argument instanceof DisplayDataChange;
-
-        switch ((DisplayDataChange) argument) {
-        case NEW_SUDOKU:
-            resetBoardView();
-            /* Falls through so the states get reseted for a new sudoku. */
-        case SUDOKU_LOCK:
-            setEnableStates((Boolean)null); //TODO: Implement with PropertyChange
-            break;
-            
-        default:
-            if (currentData.getAmountOfUnsetCells() == 0) {
-                JOptionPane.showMessageDialog(this, 
-                        (currentData.isSolution() 
-                                ? "You solved it!" 
-                                : "This looks wrong..."));
-            }
-            // No further updates necessary, the cells get individually updated.
-            break;
-        }
     }
     
     /**
@@ -277,16 +246,22 @@ public class SudokuFrame extends JFrame implements Observer {
                     currentData.solve();
                 } catch (InvalidSudokuException e1) {
                     JOptionPane.showMessageDialog(
-                            this,
+                            SudokuFrame.this,
                             "Cannot solve an invalid sudoku.",
                             "Invalid sudoku",
+                            JOptionPane.ERROR_MESSAGE);
+                } catch (UnsolvableSudokuException exc) {
+                    JOptionPane.showMessageDialog(
+                            SudokuFrame.this,
+                            "Cannot solve an unsolvable sudoku.",
+                            "Unsolvable sudoku",
                             JOptionPane.ERROR_MESSAGE);
                 }
             });
             suggest.addActionListener(e -> {
-                if (currentData.getAmountOfUnsetCells() < 1) {
+                if (currentData.isFinished()) {
                     JOptionPane.showMessageDialog(
-                            this,
+                            SudokuFrame.this,
                             "Cannot suggest a value if all cells are set.",
                             "No empty cells",
                             JOptionPane.ERROR_MESSAGE);
@@ -295,9 +270,16 @@ public class SudokuFrame extends JFrame implements Observer {
                         currentData.suggestValue();
                     } catch (InvalidSudokuException exc) {
                         JOptionPane.showMessageDialog(
-                                this,
+                                SudokuFrame.this,
                                 "Cannot suggest a value on an invalid sudoku.",
                                 "Invalid sudoku",
+                                JOptionPane.ERROR_MESSAGE);
+                    } catch (UnsolvableSudokuException exc) {
+                        JOptionPane.showMessageDialog(
+                                SudokuFrame.this,
+                                "Cannot suggest a value on an unsolvable "
+                                        + "sudoku.",
+                                "Unsolvable sudoku",
                                 JOptionPane.ERROR_MESSAGE);
                     }
                 }
@@ -329,7 +311,6 @@ public class SudokuFrame extends JFrame implements Observer {
                     Board board = SudokuFileParser.parseToBoard(sudokuFile);
                     currentData = new DisplayData(board);
                     resetBoardView(); //TODO: Manipulation of the view from the controller... allowed?
-                    currentData.attachObserver(SudokuFrame.this);
                 } catch (InvalidSudokuException | IOException 
                         | ParseException exc) {
                     JOptionPane.showMessageDialog(

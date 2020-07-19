@@ -1,12 +1,14 @@
 package sudoku.gui.model;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Deque;
 import java.util.LinkedList;
 
 import sudoku.util.Observable;
 import sudoku.util.Observer;
 
-public class SudokuHistory implements Observer {
+public class SudokuHistory {
     
     private Deque<int[][]> sudokuHistoryData = new LinkedList<>();
     
@@ -18,7 +20,14 @@ public class SudokuHistory implements Observer {
      * @param displayData The display data whose changes should be saved.
      */
     public SudokuHistory(DisplayData displayData) {
-        displayData.attachObserver(this);
+        displayData.addPropertyChangeListener("undoableEdit", 
+                new PropertyChangeListener() {
+            
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                saveSudoku((int[][]) evt.getOldValue());
+            }
+        });
     }
 
     /**
@@ -59,33 +68,6 @@ public class SudokuHistory implements Observer {
             
             // The stack is empty or contains only an initial state of a sudoku.
             return null;
-        }
-    }
-
-    @Override
-    public void update(Observable observable, Object argument) {
-        assert observable instanceof DisplayData;
-        assert argument instanceof DisplayDataChange;
-        
-        switch ((DisplayDataChange) argument) {
-        case NEW_SUDOKU:
-            /*
-             * Remove all states of the previous sudoku before adding states of
-             * the new one.
-             */
-            sudokuHistoryData.clear();
-            /*
-             * Fall through because the initial state of the new sudoku should
-             * be saved.
-             */
-        case SUDOKU_VALUES:
-            /* Save a copy of the currently displayed board. */
-            saveSudoku(((DisplayData) observable).cloneUncheckedBoard());
-            break;
-            
-        default:
-            /* The history does only care about altered sudokus. */
-            break;
         }
     }
 }

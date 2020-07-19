@@ -1,5 +1,8 @@
 package sudoku.gui.model;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+
 import sudoku.solver.Board;
 import sudoku.solver.EnforcedCell;
 import sudoku.solver.EnforcedNumber;
@@ -8,9 +11,10 @@ import sudoku.solver.Structure;
 import sudoku.solver.SudokuBoard;
 import sudoku.solver.SudokuBoardSolver;
 import sudoku.solver.SudokuSolver;
+import sudoku.solver.UnsolvableSudokuException;
 import sudoku.util.Observable;
 
-public class DisplayData extends Observable {
+public class DisplayData {
     
     /**
      * The representation of an unset cell in the unchecked board.
@@ -22,17 +26,18 @@ public class DisplayData extends Observable {
      */
     public static final Structure STRUCT = Structure.BOX;
     
+    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+    private final SudokuHistory history = new SudokuHistory(this);
+    private final SudokuSolver solver = new SudokuBoardSolver();
+    
     private int[][] uncheckedBoard;
     private boolean[][] isConstant;
     private int boxRows;
     private int boxCols;
     private int numbers;
     private int amountOfUnsetCells;
-    private final SudokuHistory history = new SudokuHistory(this);
-    private final SudokuSolver solver;
     
     public DisplayData(Board intelligentBoard) {
-        solver = new SudokuBoardSolver();
         solver.addSaturator(new EnforcedNumber());
         solver.addSaturator(new EnforcedCell());
         
@@ -55,6 +60,40 @@ public class DisplayData extends Observable {
         }
     }
 
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        pcs.addPropertyChangeListener(listener);
+    }
+
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        pcs.removePropertyChangeListener(listener);
+    }
+    
+    public void addPropertyChangeListener(
+            String propertyName, PropertyChangeListener listener) {
+        pcs.addPropertyChangeListener(propertyName, listener);
+    }
+
+    public void removePropertyChangeListener(
+            String propertyName, PropertyChangeListener listener) {
+        pcs.removePropertyChangeListener(propertyName, listener);
+    }
+    
+    /**
+     * Returns the property name used by the {@link PropertyChangeSupport} for
+     * a cell with the given major and minor coordinates in the coordinate 
+     * system specified by {@link DisplayData#STRUCT}.
+     * <p>
+     * The property name is in the format {@code "cell@STRUCTURE(major,minor)"}.
+     * 
+     * @param majorIndex The first coordinate.
+     * @param minorIndex The second coordinate.
+     * @return The property name as formatted String containing the given
+     *         coordinates.
+     */
+    public static String getCellPropertyName(int majorIndex, int minorIndex) {
+        return "cell@" + STRUCT + "(" + majorIndex + "," + minorIndex + ")";
+    }
+
     public int getCell(int major, int minor) {
         assertIndexInRange(major);
         assertIndexInRange(minor);
@@ -62,23 +101,47 @@ public class DisplayData extends Observable {
         return uncheckedBoard[major][minor];
     }
     
-    public void setCell(int major, int minor, int value) {
+    public void updateCell(int major, int minor, int value) {
         assertIndexInRange(major);
         assertIndexInRange(minor);
         assertValueInRange(value);
         
-        if (uncheckedBoard[major][minor] != value) {
-            if (uncheckedBoard[major][minor] == UNSET_CELL) {
+        updateCell(major, minor, value, true);
+    }
+    
+    private void updateCell(int major, int minor, int value, 
+            boolean updateIsFinished) {
+        int oldValue = uncheckedBoard[major][minor];
+        boolean oldIsFinished = isFinished();
+        
+        if (oldValue != value) {
+            if (oldValue == UNSET_CELL) {
                 amountOfUnsetCells--;
             } else if (value == UNSET_CELL) {
                 amountOfUnsetCells++;
             }
             
-            setChanged();
             uncheckedBoard[major][minor] = value;
         }
-
-        notifyObservers(DisplayDataChange.SUDOKU_VALUES);
+        
+        pcs.firePropertyChange(
+                getCellPropertyName(major, minor), oldValue, value);
+        
+        if (updateIsFinished) {
+            pcs.firePropertyChange("isFinished", oldIsFinished, isFinished());
+        }
+    }
+    
+    private void updateAllCells(int[][] newBoard) {
+        assert newBoard != null;
+        assert uncheckedBoard.length == newBoard.length;
+        
+        for (int major = 0; major < numbers; major++) {
+            assert uncheckedBoard[major].length == newBoard[major].length;
+            for (int minor = 0; minor < numbers; minor++) {
+                updateCell(major, minor, newBoard[major][minor], false);
+            }
+        }
     }
     
     public boolean isCellModifiable(int major, int minor) {
@@ -113,14 +176,14 @@ public class DisplayData extends Observable {
     public int getNumbers() {
         return numbers;
     }
-    
-    public int getAmountOfUnsetCells() {
-        return amountOfUnsetCells;
+
+    public boolean isFinished() {
+        return (amountOfUnsetCells == 0);
     }
-    
+
     public boolean isSolution() {
         try {
-            return generateIntelligentBoard().isSolution();
+            return (isFinished() && generateIntelligentBoard().isSolution());
         } catch (InvalidSudokuException e) {
             return false;
         }
@@ -144,11 +207,9 @@ public class DisplayData extends Observable {
      * 
      * @param board The intelligent board that will be used as unchecked board.
      *              Should not be {@code null}.
-     * @param isInitial Signalizes if the board is a new initial board, which
-     *                  is allowed to overwrite the sudokus constant markers and
-     *                  its size.
+     * @param updateIsFinished TODO
      */
-    private void applyIntelligentBoard(Board board) {
+    private void applyIntelligentBoard(Board board, boolean updateIsFinished) {
         assert board != null;
         assert boxCols == board.getBoxColumns();
         assert boxRows == board.getBoxRows();
@@ -156,10 +217,8 @@ public class DisplayData extends Observable {
         for (int major = 0; major < numbers; major++) {
             for (int minor = 0; minor < numbers; minor++) {
                 int cellValue = board.getCell(STRUCT, major, minor);
-                boolean isSet = (cellValue != Board.UNSET_CELL);
-                
-                if (isSet && (cellValue != uncheckedBoard[major][minor])) {
-                    setCell(major, minor, cellValue);
+                if (cellValue != Board.UNSET_CELL) {
+                    updateCell(major, minor, cellValue, updateIsFinished);
                 }
             }
         }
@@ -209,61 +268,56 @@ public class DisplayData extends Observable {
     public void undo() {
         int[][] lastBoard = history.undo();
         if (lastBoard != null) {
-            setChanged();
-            uncheckedBoard = lastBoard;
+            updateAllCells(lastBoard);
         }
-        
-        notifyObservers(DisplayDataChange.SUDOKU_VALUES);
     }
     
-    public void solve() throws InvalidSudokuException {
-        asyncSolveHelper(false);
+    public void solve()
+            throws InvalidSudokuException, UnsolvableSudokuException {
+        Board initialBoard = generateIntelligentBoard();
+        Board solvedBoard = solver.findFirstSolution(initialBoard);
+        if (solvedBoard == null) {
+            throw new UnsolvableSudokuException();
+        }
+        applyIntelligentBoard(solvedBoard, false);
     }
     
-    public void suggestValue() throws InvalidSudokuException {
+    public void suggestValue() 
+            throws InvalidSudokuException, UnsolvableSudokuException {
         if (amountOfUnsetCells < 1) {
             throw new IllegalStateException(
                     "Cannot suggest a value if the sudoku is already solved.");
         }
+
+        Board initialBoard = generateIntelligentBoard();
+        Board solvedBoard = solver.findFirstSolution(initialBoard);
+        if (solvedBoard == null) {
+            throw new UnsolvableSudokuException();
+        }
         
-        asyncSolveHelper(true);
+        int[] suggestedCell = solvedBoard.getLastCellSet();
+        int suggestedValue = solvedBoard.getCell(
+                Structure.ROW, suggestedCell[0], suggestedCell[1]);
+
+        /* 
+         * This should never cause an InvalidSudokuException since the cell
+         * was taken from the fully solved sudoku board.
+         */
+        initialBoard.setCell(Structure.ROW, suggestedCell[0], suggestedCell[1],
+                suggestedValue);
+        
+        /*
+         * Applies the initial board with one changed cell and acts as if the
+         * cell was set manually.
+         */
+        applyIntelligentBoard(initialBoard, true);
     }
     
-    private void asyncSolveHelper(boolean applyOnlySuggestion) 
-            throws InvalidSudokuException {
-        
-        Board initialBoard = generateIntelligentBoard();
-        
         /*
          * Execute the solve on a seperate Thread. This ensures that the Swing
          * EventDispatcher stays responsive and can process user interaction.
          //currentCalculationThread = new Thread(() -> {
          */
-            Board solvedBoard = solver.findFirstSolution(initialBoard);
-            Board requestedBoard;
-            if (applyOnlySuggestion) {
-                requestedBoard = initialBoard;
-                int[] suggestedCell = solvedBoard.getLastCellSet();
-                int suggestedValue = solvedBoard.getCell(
-                        Structure.ROW, suggestedCell[0], suggestedCell[1]);
-                try {
-                    requestedBoard.setCell(Structure.ROW, suggestedCell[0],
-                            suggestedCell[1], suggestedValue);
-                } catch (InvalidSudokuException e) {
-                    /* 
-                     * This should never happen since the cell was taken from
-                     * the fully solved sudoku board.
-                     */
-                    throw new AssertionError(e);
-                }
-            } else {
-                requestedBoard = solvedBoard;
-            }
-            applyIntelligentBoard(requestedBoard);
-            notifyObservers(DisplayDataChange.SUDOKU_VALUES);
-            // currentCalculationThread = null;
-        //currentCalculationThread.start();
-    }
     
     /*@SuppressWarnings("deprecation")
     public void stopOngoingCalculation() {

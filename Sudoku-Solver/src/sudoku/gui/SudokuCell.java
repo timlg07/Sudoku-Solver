@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
@@ -18,7 +20,7 @@ import sudoku.gui.model.DisplayDataChange;
 import sudoku.util.Observable;
 import sudoku.util.Observer;
 
-public class SudokuCell extends JLabel implements Observer {
+public class SudokuCell extends JLabel {
 
     private static final long serialVersionUID = 1L;
     
@@ -65,31 +67,15 @@ public class SudokuCell extends JLabel implements Observer {
         setFont(getFont().deriveFont((float) FONT_SIZE));
         
         updateValue();
-        data.attachObserver(this);
-    }
-
-    @Override
-    public void update(Observable observable, Object argument) {
-        assert observable instanceof DisplayData;
-        assert data == ((DisplayData) observable);
-        assert argument instanceof DisplayDataChange;
-        
-        switch ((DisplayDataChange) argument) {
-        case NEW_SUDOKU:
-            /*
-             * This cell should no longer be updated as the sudoku it was part
-             * of got replaced by a new one.
-             */
-            data.detachObserver(this);
-            break;
+        data.addPropertyChangeListener(
+                DisplayData.getCellPropertyName(major, minor), 
+                new PropertyChangeListener() {
             
-        case SUDOKU_LOCK:
-            updatePopupMenuEnabled((Boolean)null); //TODO: Implement with PropertyChange
-            break;
-            
-        default:
-            updateValue();
-        }
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                updateValue();
+            }
+        });
     }
     
     private void updatePopupMenuEnabled(boolean enabled) {
@@ -143,7 +129,7 @@ public class SudokuCell extends JLabel implements Observer {
             public void actionPerformed(ActionEvent e) {
                 
                 // Use attributes of SudokuCell.this:
-                data.setCell(majorCoord, minorCoord, assignedValue);
+                data.updateCell(majorCoord, minorCoord, assignedValue);
             }
         }
     }
