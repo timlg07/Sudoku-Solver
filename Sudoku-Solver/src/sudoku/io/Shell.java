@@ -2,17 +2,19 @@ package sudoku.io;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.ParseException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import sudoku.model.Board;
-import sudoku.model.EnforcedCell;
-import sudoku.model.EnforcedNumber;
-import sudoku.model.InvalidSudokuException;
-import sudoku.model.SudokuBoardSolver;
-import sudoku.model.SudokuSolver;
+import sudoku.solver.Board;
+import sudoku.solver.EnforcedCell;
+import sudoku.solver.EnforcedNumber;
+import sudoku.solver.InvalidSudokuException;
+import sudoku.solver.SudokuBoardSolver;
+import sudoku.solver.SudokuSolver;
 
 /**
  * The shell class handles the interaction between the user and the data model
@@ -217,15 +219,23 @@ public final class Shell {
         String filename = tokenizedInput[1].replaceAll("^\"|\"$", "");  
         
         File sudokuFile = new File(filename);
+        String notFoundMsg = "The file \"" + sudokuFile.getAbsolutePath() 
+                             + "\" was not found.";
         if (sudokuFile.canRead() && sudokuFile.isFile()) {
             try {
                 currentBoard = SudokuFileParser.parseToBoard(sudokuFile);
             } catch (InvalidSudokuException e) {
                 printError("The file contains an invalid sudoku.");
+            } catch (ParseException e) {
+                printError(e.getMessage());
+            } catch (FileNotFoundException e) {
+                printError(notFoundMsg);
+            } catch (IOException e) {
+                printError("Unable to read the file " 
+                           + sudokuFile.getAbsolutePath());
             }
         } else {
-            printError("The file \"" + sudokuFile.getAbsolutePath() 
-                       + "\" was not found.");
+            printError(notFoundMsg);
         }
     }
     

@@ -1,4 +1,4 @@
-package sudoku.model;
+package sudoku.solver;
 
 /**
  * An interface which must be implemented by classes which provide a solution

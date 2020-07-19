@@ -1,4 +1,4 @@
-package sudoku.model;
+package sudoku.solver;
 
 /**
  * A solution strategy that sets all cells of a sudoku which have to contain a

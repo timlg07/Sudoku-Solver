@@ -1,4 +1,4 @@
-package sudoku.model;
+package sudoku.solver;
 
 /**
  * An interface for the representation and for solving of Sudokus, which

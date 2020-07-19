@@ -1,4 +1,4 @@
-package sudoku.model;
+package sudoku.solver;
 
 import java.util.ArrayList;
 import java.util.Deque;
