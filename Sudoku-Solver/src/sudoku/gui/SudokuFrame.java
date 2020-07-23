@@ -1,25 +1,17 @@
 package sudoku.gui;
 
-import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.beans.IndexedPropertyChangeEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import javax.swing.BorderFactory;
-import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -27,26 +19,17 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.Border;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import sudoku.gui.model.DisplayData;
-import sudoku.gui.model.DisplayDataChange;
 import sudoku.io.SudokuFileParser;
 import sudoku.solver.Board;
 import sudoku.solver.InvalidSudokuException;
-import sudoku.solver.Structure;
-import sudoku.solver.SudokuBoardSolver;
-import sudoku.solver.SudokuSolver;
 import sudoku.solver.UnsolvableSudokuException;
-import sudoku.util.Observable;
-import sudoku.util.Observer;
 
 /**
  * The custom JFrame that is the main window of the graphical user interface.
@@ -201,9 +184,6 @@ public class SudokuFrame extends JFrame {
         JMenuItem undo = editMenu.add("Undo");
         JMenuItem suggest = solveMenu.add("Suggest Value");
         JMenuItem solve = solveMenu.add("Solve");
-        
-        // The modifier used to generate key strokes including the CTRL key.
-        final int ctrl = KeyEvent.CTRL_DOWN_MASK;
 
         setCtrlAccelerator(open, KeyEvent.VK_O);
         setCtrlAccelerator(exit, KeyEvent.VK_X);
