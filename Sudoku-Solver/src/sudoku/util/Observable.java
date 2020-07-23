@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import sudoku.gui.model.DisplayDataChange;
-
 public abstract class Observable {
 
     private boolean changed = false;
@@ -48,11 +46,6 @@ public abstract class Observable {
             
             clearChanged();
         }
-
-        System.out.println(
-            "change:" + (DisplayDataChange)argument + " by "
-            + Thread.currentThread().getStackTrace()[2].getMethodName() + " @ "
-            + Thread.currentThread().getName());
 
         observersToNotify.forEach(o -> o.update(this, argument));
     }

@@ -8,7 +8,7 @@ import sudoku.util.Observer;
 
 public class SudokuHistory implements Observer {
     
-    private Deque<int[][]> sudokuHistoryData = new LinkedList<>();
+    private final Deque<int[][]> sudokuHistoryData;
     
     /**
      * Constructs a new SudokuHistory and attaches it to the given observable
@@ -18,6 +18,8 @@ public class SudokuHistory implements Observer {
      * @param displayData The display data whose changes should be saved.
      */
     public SudokuHistory(DisplayData displayData) {
+        sudokuHistoryData = new LinkedList<>();
+        sudokuHistoryData.add(displayData.cloneUncheckedBoard());
         displayData.attachObserver(this);
     }
 
@@ -64,28 +66,9 @@ public class SudokuHistory implements Observer {
 
     @Override
     public void update(Observable observable, Object argument) {
-        assert observable instanceof DisplayData;
-        assert argument instanceof DisplayDataChange;
-        
-        switch ((DisplayDataChange) argument) {
-        case NEW_SUDOKU:
-            /*
-             * Remove all states of the previous sudoku before adding states of
-             * the new one.
-             */
-            sudokuHistoryData.clear();
-            /*
-             * Fall through because the initial state of the new sudoku should
-             * be saved.
-             */
-        case SUDOKU_VALUES:
-            /* Save a copy of the currently displayed board. */
-            saveSudoku(((DisplayData) observable).cloneUncheckedBoard());
-            break;
-            
-        default:
-            /* The history does only care about altered sudokus. */
-            break;
+        if (observable instanceof DisplayData) {
+            int[][] sudoku = ((DisplayData) observable).cloneUncheckedBoard();
+            saveSudoku(sudoku);
         }
     }
 }

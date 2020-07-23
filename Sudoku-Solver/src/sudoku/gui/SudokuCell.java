@@ -6,26 +6,26 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingConstants;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
 
 import sudoku.gui.model.DisplayData;
-import sudoku.gui.model.DisplayDataChange;
-import sudoku.util.Observable;
-import sudoku.util.Observer;
 
-public class SudokuCell extends JLabel implements Observer {
+public class SudokuCell extends JLabel {
 
     private static final long serialVersionUID = 1L;
     
+
     /**
-     * The foreground color of not modifiable cells.
+     * The foreground color each unmodifiable cell should have.
      */
-    private static final Color NOT_MODIFIABLE_FG = Color.RED;
+    private static final Color FIXED_CELL_COLOR = Color.RED;
     
     /**
      * The lowered bordered of every cell.
@@ -33,84 +33,63 @@ public class SudokuCell extends JLabel implements Observer {
     private static final Border CELL_BORDER 
             = BorderFactory.createBevelBorder(BevelBorder.LOWERED);
 
+    /** 
+     * The font size of the cells text. This value is also used to calculate the
+     * preferred and minimum size.
+     */
     private static final int FONT_SIZE = 14;
-    private static final Dimension PREF_SIZE 
-            = new Dimension(FONT_SIZE * 3, FONT_SIZE * 3);
-    private static final Dimension MIN_SIZE 
-            = new Dimension(FONT_SIZE, FONT_SIZE);
     
-    private final int majorCoord;
-    private final int minorCoord;
+    private final int majorIndex;
+    private final int minorIndex;
     private final DisplayData data;
     private final JPopupMenu popupMenu;
-    private int value;
 
-    public SudokuCell(int major, int minor, DisplayData data) {
+    public SudokuCell(
+            int major, int minor, DisplayData data, boolean isModifiable) {
         super("", SwingConstants.CENTER);
-        
-        majorCoord = major;
-        minorCoord = minor;
+        majorIndex = major;
+        minorIndex = minor;
         this.data = data;
         
-        if (data.isCellModifiable(major, minor)) {
-            popupMenu = new CellPopupMenu(data.getNumbers());
+        if (isModifiable) {
+            popupMenu = new CellPopupMenu();
             setComponentPopupMenu(popupMenu);
         } else {
             popupMenu = null;
-            setForeground(NOT_MODIFIABLE_FG);
+            setForeground(FIXED_CELL_COLOR);
         }
-        setBorder(CELL_BORDER);
-        setPreferredSize(PREF_SIZE);
-        setMinimumSize(MIN_SIZE);
-        setFont(getFont().deriveFont((float) FONT_SIZE));
-        
-        updateValue();
-        data.attachObserver(this);
-    }
 
-    @Override
-    public void update(Observable observable, Object argument) {
-        assert observable instanceof DisplayData;
-        assert data == ((DisplayData) observable);
-        assert argument instanceof DisplayDataChange;
-        
-        switch ((DisplayDataChange) argument) {
-        case NEW_SUDOKU:
-            /*
-             * This cell should no longer be updated as the sudoku it was part
-             * of got replaced by a new one.
-             */
-            data.detachObserver(this);
-            break;
-            
-        case SUDOKU_LOCK:
-            updatePopupMenuEnabled();
-            break;
-            
-        default:
-            updateValue();
-        }
+        setComponentPopupMenu(popupMenu);
+        setFont(getFont().deriveFont((float) FONT_SIZE));
+        setDimensions();
+        setBorder(CELL_BORDER);
     }
     
-    private void updatePopupMenuEnabled() {
-        if (data.isOperationOnSudokuAllowed()) {
+    private void setDimensions() {
+        // maybe constant size but lower the font size?
+        int maxDigits = (int) (Math.log10(data.getNumbers()) + 1);
+        int contentSize = maxDigits * FONT_SIZE;
+        int sizeWithPadding = contentSize + (FONT_SIZE * 2);
+        
+        setPreferredSize(new Dimension(sizeWithPadding, sizeWithPadding));
+        setMinimumSize(new Dimension(contentSize, contentSize));
+    }
+    
+    void setPopupMenuEnabled(boolean enabled) {
+        // popupMenu.setEnabled(enabled);
+        if (enabled) {
             setComponentPopupMenu(popupMenu);
         } else {
             setComponentPopupMenu(null);
         }
     }
 
-    private void updateValue() {
-        int newValue = data.getCell(majorCoord, minorCoord);
-        if (value != newValue) {
-            value = newValue;
-            setText(toString());
-        }
-    }
-    
-    @Override
-    public String toString() {
-        return (value == DisplayData.UNSET_CELL) ? "" : Integer.toString(value);
+    void updateValue() {
+        int value = data.getCell(majorIndex, minorIndex);
+        String displayValue = (value == DisplayData.UNSET_CELL) 
+                            ? "" 
+                            : Integer.toString(value);
+        setText(displayValue);
     }
 
     
@@ -118,10 +97,8 @@ public class SudokuCell extends JLabel implements Observer {
         
         private static final long serialVersionUID = 1L;
 
-        public CellPopupMenu(int numbers) {
-            super();
-            
-            for (int i = 1; i <= numbers; i++) {
+        public CellPopupMenu() {
+            for (int i = 1; i <= data.getNumbers(); i++) {
                 JMenuItem item = add(Integer.toString(i));
                 item.addActionListener(new ChangeCellActionListener(i));
             }
@@ -141,9 +118,7 @@ public class SudokuCell extends JLabel implements Observer {
             
             @Override
             public void actionPerformed(ActionEvent e) {
-                
-                // Use attributes of SudokuCell.this:
-                data.setCell(majorCoord, minorCoord, assignedValue);
+                data.setCell(majorIndex, minorIndex, assignedValue);
             }
         }
     }
