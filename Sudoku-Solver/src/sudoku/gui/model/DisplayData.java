@@ -29,14 +29,12 @@ public class DisplayData extends Observable {
     private final int boxCols;
     private final int numbers;
     private int[][] uncheckedBoard;
-    private int amountOfUnsetCells;
     
     public DisplayData(Board intelligentBoard) {
         numbers = intelligentBoard.getNumbers();
         boxCols = intelligentBoard.getBoxColumns();
         boxRows = intelligentBoard.getBoxRows();
         uncheckedBoard = new int[numbers][numbers];
-        amountOfUnsetCells = 0;
         
         for (int major = 0; major < numbers; major++) {
             for (int minor = 0; minor < numbers; minor++) {
@@ -44,7 +42,6 @@ public class DisplayData extends Observable {
                 boolean isSet = (cell != Board.UNSET_CELL);
                 
                 uncheckedBoard[major][minor] = (isSet ? cell : UNSET_CELL);
-                amountOfUnsetCells += (isSet ? 0 : 1);
             }
         }
         
@@ -69,12 +66,6 @@ public class DisplayData extends Observable {
         int oldValue = uncheckedBoard[major][minor];
         
         if (oldValue != value) {
-            if (oldValue == UNSET_CELL) {
-                amountOfUnsetCells--;
-            } else if (value == UNSET_CELL) {
-                amountOfUnsetCells++;
-            }
-            
             setChanged();
             uncheckedBoard[major][minor] = value;
         }
@@ -108,13 +99,20 @@ public class DisplayData extends Observable {
         return numbers;
     }
 
-    public boolean isFinished() {
-        return (amountOfUnsetCells == 0);
+    public boolean isFilled() {
+        for (int[] box : uncheckedBoard) {
+            for (int cell : box) {
+                if (cell == UNSET_CELL) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public boolean isSolution() {
         try {
-            return (isFinished() && generateIntelligentBoard().isSolution());
+            return (isFilled() && generateIntelligentBoard().isSolution());
         } catch (InvalidSudokuException e) {
             return false;
         }
@@ -146,10 +144,9 @@ public class DisplayData extends Observable {
             for (int minor = 0; minor < numbers; minor++) {
                 int cellValue = board.getCell(STRUCT, major, minor);
                 if ((cellValue != Board.UNSET_CELL) 
-                        && (uncheckedBoard[major][minor] == Board.UNSET_CELL)) {
+                        && (uncheckedBoard[major][minor] == UNSET_CELL)) {
                     setChanged();
                     uncheckedBoard[major][minor] = cellValue;
-                    amountOfUnsetCells--;
                 }
             }
         }
@@ -219,9 +216,9 @@ public class DisplayData extends Observable {
     
     public Board getBoardWithSuggestion() 
             throws InvalidSudokuException, UnsolvableSudokuException {
-        if (amountOfUnsetCells < 1) {
+        if (isFilled()) {
             throw new IllegalStateException(
-                    "Cannot suggest a value if the sudoku is already solved.");
+                    "Cannot suggest a value if the sudoku is already filled.");
         }
 
         Board initialBoard = generateIntelligentBoard();

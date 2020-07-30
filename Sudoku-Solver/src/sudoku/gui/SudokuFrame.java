@@ -205,7 +205,7 @@ public class SudokuFrame extends JFrame {
             calculationThread.start();
         });
         suggest.addActionListener(e -> {
-            if (currentData.isFinished()) {
+            if (currentData.isFilled()) {
                 showError("No empty cells", 
                         "Cannot suggest a value if all cells are set.");
             } else {
