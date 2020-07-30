@@ -151,6 +151,12 @@ public class SudokuFrame extends JFrame {
         setContentPane(new GameBoardPanel(currentData));
         pack(); // Handles validation of the whole Container as well.
         setLocationRelativeTo(null);
+        
+        /*
+         * Stop ongoing calculation on the last sudoku, since the result can not
+         * be shown anymore and the operations need to be unlocked.
+         */
+        stopOngoingCalculation();
     }
 
     /**
@@ -202,6 +208,7 @@ public class SudokuFrame extends JFrame {
          */
         solve.addActionListener(evt -> {
             calculationThread = new SolveThread();
+            setEnableStates(false);
             calculationThread.start();
         });
         suggest.addActionListener(e -> {
@@ -210,6 +217,7 @@ public class SudokuFrame extends JFrame {
                         "Cannot suggest a value if all cells are set.");
             } else {
                 calculationThread = new SuggestThread();
+                setEnableStates(false);
                 calculationThread.start();
             }
         });
@@ -266,8 +274,10 @@ public class SudokuFrame extends JFrame {
         public void run() {
             try {
                 Board solvedBoard = currentData.getSolvedBoard();
-                SwingUtilities.invokeLater(
-                        () -> currentData.applyMachineMove(solvedBoard));
+                SwingUtilities.invokeLater(() -> {
+                    currentData.applyMachineMove(solvedBoard);
+                    setEnableStates(true);
+                });
             } catch (InvalidSudokuException e1) {
                 showError("Invalid sudoku", "Cannot solve an invalid sudoku.");
             } catch (UnsolvableSudokuException exc) {
@@ -284,8 +294,10 @@ public class SudokuFrame extends JFrame {
         public void run() {
             try {
                 Board suggestedBoard = currentData.getBoardWithSuggestion();
-                SwingUtilities.invokeLater(
-                        () -> currentData.applyMachineMove(suggestedBoard));
+                SwingUtilities.invokeLater(() -> {
+                    currentData.applyMachineMove(suggestedBoard);
+                    setEnableStates(true);
+                });
             } catch (InvalidSudokuException exc) {
                 showError("Invalid sudoku", 
                         "Cannot suggest a value on an invalid sudoku.");
@@ -298,12 +310,14 @@ public class SudokuFrame extends JFrame {
     
     /**
      * If there is an ongoing calculation in a separate thread, this thread is
-     * stopped.
+     * stopped and all calculations on the sudoku are enabled again.
      */
     @SuppressWarnings("deprecation")
     public void stopOngoingCalculation() {
         if (calculationThread != null) {
             calculationThread.stop();
+            calculationThread = null; // The reference is not needed anymore.
+            setEnableStates(true);
         }
     }
 }
