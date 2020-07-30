@@ -335,7 +335,7 @@ public class SudokuFrame extends JFrame {
         if (calculationThread != null) {
             calculationThread.stop();
             calculationThread = null; // The reference is not needed anymore.
-            setEnableStates(true);
         }
+        setEnableStates(true);
     }
 }
