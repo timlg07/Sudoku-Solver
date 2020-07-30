@@ -241,19 +241,21 @@ public class SudokuFrame extends JFrame {
         public void actionPerformed(ActionEvent evt) {
             int fileChooserState = fileChooser.showOpenDialog(SudokuFrame.this);
             if (fileChooserState == JFileChooser.APPROVE_OPTION) {
-                File sudokuFile = fileChooser.getSelectedFile();
-                try {
-                    Board board = SudokuFileParser.parseToBoard(sudokuFile);
-                    currentData = new DisplayData(board);
-                    resetBoardView();
-                } catch (InvalidSudokuException | IOException 
-                        | ParseException exc) {
-                    JOptionPane.showMessageDialog(
-                            SudokuFrame.this, 
-                            exc.getMessage(),
-                            "Unable to parse this file.", 
-                            JOptionPane.ERROR_MESSAGE);
-                }
+                loadSudokuFile(fileChooser.getSelectedFile());
+            }
+        }
+        
+        private void loadSudokuFile(File sudokuFile) {
+            try {
+                Board board = SudokuFileParser.parseToBoard(sudokuFile);
+                currentData = new DisplayData(board);
+                resetBoardView();
+            } catch (InvalidSudokuException | IOException | ParseException e) {
+                JOptionPane.showMessageDialog(
+                        SudokuFrame.this, 
+                        e.getMessage(),
+                        "Unable to parse this file.", 
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -294,9 +296,14 @@ public class SudokuFrame extends JFrame {
         }
     }
     
+    /**
+     * If there is an ongoing calculation in a separate thread, this thread is
+     * stopped.
+     */
     @SuppressWarnings("deprecation")
     public void stopOngoingCalculation() {
         if (calculationThread != null) {
+            System.out.println("s.t.o.p.");
             calculationThread.stop();
         }
     }

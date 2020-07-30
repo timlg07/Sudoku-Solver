@@ -122,12 +122,14 @@ public class DisplayData extends Observable {
 
     /** 
      * Applies the given intelligent board to the current unchecked board by
-     * transferring all set values to it.
+     * setting all values that are only set in the intelligent board.
      * <p>
-     * This method sets the changed flag of the {@link Observable} represented
-     * by this DisplayData and notifies the observers.
+     * This method may set the changed flag of the {@link Observable}
+     * represented by this DisplayData and notify the observers. It also updates
+     * the counter for the amount of unset cells if a cell is set to a value.
      * 
-     * @param board The intelligent board that will be used as unchecked board.
+     * @param board The intelligent board which values should be transferred to
+     *              the unchecked board.
      *              Must not be {@code null} and must have the same sizes as the
      *              current unchecked board.
      */
@@ -135,7 +137,7 @@ public class DisplayData extends Observable {
         if (board == null) {
             throw new IllegalArgumentException("The board can not be null.");
         } else if ((boxCols != board.getBoxColumns()) 
-                || (boxRows != board.getBoxRows())) {
+                   || (boxRows != board.getBoxRows())) {
             throw new IllegalArgumentException(
                     "The board has a different size than the current one.");
         }
@@ -143,9 +145,11 @@ public class DisplayData extends Observable {
         for (int major = 0; major < numbers; major++) {
             for (int minor = 0; minor < numbers; minor++) {
                 int cellValue = board.getCell(STRUCT, major, minor);
-                if (cellValue != Board.UNSET_CELL) {
+                if ((cellValue != Board.UNSET_CELL) 
+                        && (uncheckedBoard[major][minor] == Board.UNSET_CELL)) {
                     setChanged();
                     uncheckedBoard[major][minor] = cellValue;
+                    amountOfUnsetCells--;
                 }
             }
         }
