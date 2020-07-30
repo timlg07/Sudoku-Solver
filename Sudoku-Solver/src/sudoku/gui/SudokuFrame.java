@@ -239,6 +239,18 @@ public class SudokuFrame extends JFrame {
         JOptionPane.showMessageDialog(
                 this, message, title, JOptionPane.ERROR_MESSAGE);
     }
+
+    private void checkForSudokuFinished() {
+        if (currentData.isFilled()) {
+            String message;
+            if (currentData.isSolution()) {
+                message = "Sudoku solved!";
+            } else {
+                message = "This is not a valid solution.";
+            }
+            JOptionPane.showMessageDialog(this, message);
+        }
+    }
     
     /**
      * This {@link ActionListener} handles the action of opening a sudoku file.
@@ -297,6 +309,7 @@ public class SudokuFrame extends JFrame {
                 SwingUtilities.invokeLater(() -> {
                     currentData.applyMachineMove(suggestedBoard);
                     setEnableStates(true);
+                    checkForSudokuFinished();
                 });
             } catch (InvalidSudokuException exc) {
                 showError("Invalid sudoku", 

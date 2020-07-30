@@ -110,9 +110,15 @@ public class DisplayData extends Observable {
         return true;
     }
 
+    /**
+     * Tries to generate an intelligent board from the current unchecked board
+     * and returns whether this board is a valid solution for the sudoku or not.
+     * 
+     * @return {@code true} if the current unchecked board is a valid solution.
+     */
     public boolean isSolution() {
         try {
-            return (isFilled() && generateIntelligentBoard().isSolution());
+            return generateIntelligentBoard().isSolution();
         } catch (InvalidSudokuException e) {
             return false;
         }
