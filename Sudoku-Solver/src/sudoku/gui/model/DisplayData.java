@@ -123,8 +123,7 @@ public class DisplayData extends Observable {
      * setting all values that are only set in the intelligent board.
      * <p>
      * This method may set the changed flag of the {@link Observable}
-     * represented by this DisplayData and notify the observers. It also updates
-     * the counter for the amount of unset cells if a cell is set to a value.
+     * represented by this DisplayData and notify the observers.
      * 
      * @param board The intelligent board which values should be transferred to
      *              the unchecked board.
