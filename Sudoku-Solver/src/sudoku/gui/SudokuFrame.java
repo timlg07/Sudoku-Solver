@@ -203,6 +203,15 @@ public class SudokuFrame extends JFrame {
         setCtrlAccelerator(suggest, KeyEvent.VK_V);
         setCtrlAccelerator(solve, KeyEvent.VK_A);
 
+        fileMenu.setMnemonic(KeyEvent.VK_F);
+        editMenu.setMnemonic(KeyEvent.VK_E);
+        solveMenu.setMnemonic(KeyEvent.VK_S);
+        open.setMnemonic(KeyEvent.VK_O);
+        exit.setMnemonic(KeyEvent.VK_X);
+        undo.setMnemonic(KeyEvent.VK_U);
+        suggest.setMnemonic(KeyEvent.VK_V);
+        solve.setMnemonic(KeyEvent.VK_S);
+
         open.addActionListener(new OpenFileActionListener());
         exit.addActionListener(evt -> dispose());
         undo.addActionListener(evt -> currentData.undo());
