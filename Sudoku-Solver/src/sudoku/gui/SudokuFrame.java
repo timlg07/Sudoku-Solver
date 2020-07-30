@@ -303,7 +303,6 @@ public class SudokuFrame extends JFrame {
     @SuppressWarnings("deprecation")
     public void stopOngoingCalculation() {
         if (calculationThread != null) {
-            System.out.println("s.t.o.p.");
             calculationThread.stop();
         }
     }
