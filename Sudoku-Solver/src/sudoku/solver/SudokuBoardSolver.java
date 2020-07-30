@@ -1,6 +1,7 @@
 package sudoku.solver;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -155,7 +156,11 @@ public class SudokuBoardSolver implements SudokuSolver {
                     return solutions;
                 }
             } else {
-                candidates.addAll(generateCandidates(currentBoard));
+                List<Board> newCandidates = generateCandidates(currentBoard);
+                Collections.reverse(newCandidates);
+                for (Board newCandidate : newCandidates) {
+                    candidates.push(newCandidate);
+                }
             }
         }
         
