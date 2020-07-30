@@ -1,6 +1,7 @@
 package sudoku.gui;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -117,6 +118,8 @@ public class SudokuCell extends JLabel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 data.setCell(majorIndex, minorIndex, assignedValue);
+                Component rootFrame = SudokuCell.this.getRootPane().getParent();
+                SudokuDialogMessages.showMessageIfFilled(rootFrame, data);
             }
         }
     }

@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -211,16 +213,31 @@ public class SudokuFrame extends JFrame {
          * process user interaction while the sudoku gets solved.
          */
         solve.addActionListener(evt -> {
-            calculationThread = new SolveThread();
+            calculationThread = new SudokuOperationThread(true) {
+                
+                @Override
+                protected Board boardSupplierOperation() 
+                        throws InvalidSudokuException, 
+                               UnsolvableSudokuException {
+                    return currentData.getSolvedBoard();
+                }
+            };
             setEnableStates(false);
             calculationThread.start();
         });
         suggest.addActionListener(e -> {
             if (currentData.isFilled()) {
-                showError("No empty cells", 
-                        "Cannot suggest a value if all cells are set.");
+                SudokuDialogMessages.showErrorAlreadyFilled(SudokuFrame.this);
             } else {
-                calculationThread = new SuggestThread();
+                calculationThread = new SudokuOperationThread(false) {
+                    @Override
+                    protected Board boardSupplierOperation() 
+                            throws InvalidSudokuException, 
+                                   UnsolvableSudokuException  {
+                        return currentData.getBoardWithSuggestion();
+                    }
+                };
+                
                 setEnableStates(false);
                 calculationThread.start();
             }
@@ -237,23 +254,6 @@ public class SudokuFrame extends JFrame {
     private void setCtrlAccelerator(JMenuItem component, int key) {
         component.setAccelerator(
                 KeyStroke.getKeyStroke(key, KeyEvent.CTRL_DOWN_MASK));
-    }
-    
-    private void showError(String title, String message) {
-        JOptionPane.showMessageDialog(
-                this, message, title, JOptionPane.ERROR_MESSAGE);
-    }
-
-    private void checkForSudokuFinished() {
-        if (currentData.isFilled()) {
-            String message;
-            if (currentData.isSolution()) {
-                message = "Sudoku solved!";
-            } else {
-                message = "This is not a valid solution.";
-            }
-            JOptionPane.showMessageDialog(this, message);
-        }
     }
     
     /**
@@ -284,43 +284,40 @@ public class SudokuFrame extends JFrame {
         }
     }
     
-    private class SolveThread extends Thread {
+    private abstract class SudokuOperationThread extends Thread {
         
-        @Override
-        public void run() {
-            try {
-                Board solvedBoard = currentData.getSolvedBoard();
-                SwingUtilities.invokeLater(() -> {
-                    currentData.applyMachineMove(solvedBoard);
-                    setEnableStates(true);
-                });
-            } catch (InvalidSudokuException e1) {
-                showError("Invalid sudoku", "Cannot solve an invalid sudoku.");
-            } catch (UnsolvableSudokuException exc) {
-                showError("Unsolvable sudoku", 
-                        "Cannot solve an unsolvable sudoku.");
-            }
+        private final boolean isSolutionExpected;
+        
+        protected SudokuOperationThread(boolean isSolutionExpected) {
+            this.isSolutionExpected = isSolutionExpected;
         }
         
-    }
-    
-    private class SuggestThread extends Thread {
+        protected abstract Board boardSupplierOperation() 
+                throws InvalidSudokuException, UnsolvableSudokuException;
         
         @Override
         public void run() {
             try {
-                Board suggestedBoard = currentData.getBoardWithSuggestion();
+                // Execute the operation on the sudoku that may take a while.
+                Board result = boardSupplierOperation();
+                
+                /*
+                 * Update model and view sequential with the other operations
+                 * on the AWT event dispatching thread.
+                 */
                 SwingUtilities.invokeLater(() -> {
-                    currentData.applyMachineMove(suggestedBoard);
+                    currentData.applyMachineMove(result);
                     setEnableStates(true);
-                    checkForSudokuFinished();
+                    
+                    if (!isSolutionExpected) {
+                        SudokuDialogMessages.showMessageIfFilled(
+                                SudokuFrame.this, currentData);
+                    }
                 });
             } catch (InvalidSudokuException exc) {
-                showError("Invalid sudoku", 
-                        "Cannot suggest a value on an invalid sudoku.");
+                SudokuDialogMessages.showErrorInvalid(SudokuFrame.this);
             } catch (UnsolvableSudokuException exc) {
-                showError("Unsolvable sudoku", 
-                        "Cannot suggest a value on an unsolvable sudoku.");
+                SudokuDialogMessages.showErrorUnsolvable(SudokuFrame.this);
             }
         }
     }
