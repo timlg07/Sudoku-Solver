@@ -85,4 +85,8 @@ public class GameBoardPanel extends Container implements Observer {
          */
         cells.forEach(SudokuCell::updateValue);
     }
+    
+    public void setPopupsEnabled(boolean enabled) {
+        cells.forEach(c -> c.setPopupMenuEnabled(enabled));
+    }
 }

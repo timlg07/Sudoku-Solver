@@ -64,6 +64,8 @@ public class SudokuFrame extends JFrame {
      */
     private DisplayData currentData;
     
+    private GameBoardPanel currentGameBoardPanel;
+    
     /**
      * A collection of menu items that will perform operations on the current 
      * sudoku if the user performs an action on them. They can be disabled
@@ -130,9 +132,10 @@ public class SudokuFrame extends JFrame {
      * (or unlock) all operations on the current sudoku.
      */
     private void setEnableStates(boolean allowed) {
-        operationsOnSudoku.forEach(o -> {
-            o.setEnabled(allowed);
-        });
+        operationsOnSudoku.forEach(o -> o.setEnabled(allowed));
+        if (currentGameBoardPanel != null) {
+            currentGameBoardPanel.setPopupsEnabled(allowed);
+        }
     }
 
     /**
@@ -148,7 +151,8 @@ public class SudokuFrame extends JFrame {
         assert currentData != null;
 
         // Update the visible frame and its content.
-        setContentPane(new GameBoardPanel(currentData));
+        currentGameBoardPanel = new GameBoardPanel(currentData);
+        setContentPane(currentGameBoardPanel);
         pack(); // Handles validation of the whole Container as well.
         setLocationRelativeTo(null);
         
