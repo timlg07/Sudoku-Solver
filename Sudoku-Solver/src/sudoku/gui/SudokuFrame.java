@@ -11,8 +11,6 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -94,7 +92,7 @@ public class SudokuFrame extends JFrame {
         fileChooser.setFileFilter(SUDOKU_FILE_FILTER);
         
         setJMenuBar(createMenuBar());
-        setEnableStates(true);
+        setEnableStates(false);
         
         // The info text that initially explains why the window is empty.
         String info = "No sudoku file loaded. Press CTRL + O to open a file.";
@@ -124,7 +122,7 @@ public class SudokuFrame extends JFrame {
                 stopOngoingCalculation();
             }
         });
-        
+
         setVisible(true);
     }
     
@@ -188,7 +186,6 @@ public class SudokuFrame extends JFrame {
          */
         operationsOnSudoku.add(editMenu);
         operationsOnSudoku.add(solveMenu);
-        editMenu.setEnabled(false);
         setEnableStates(false); // Initially there is no sudoku loaded.
         
         JMenuItem open = fileMenu.add("Open");
@@ -255,8 +252,6 @@ public class SudokuFrame extends JFrame {
         menuBar.add(fileMenu);
         menuBar.add(editMenu);
         menuBar.add(solveMenu);
-
-        editMenu.setEnabled(false);
         return menuBar;
     }
     
