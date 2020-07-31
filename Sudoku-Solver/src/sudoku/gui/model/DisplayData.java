@@ -11,6 +11,14 @@ import sudoku.solver.SudokuSolver;
 import sudoku.solver.UnsolvableSudokuException;
 import sudoku.util.Observable;
 
+/**
+ * This class is a data model that can be used for user interfaces. It manages
+ * a unchecked sudoku board and provides different operations that can be 
+ * performed on it.
+ * <p>
+ * An instance of this class can be used as {@link Observable} and will notify
+ * attached observers about changes of the sudoku.
+ */
 public class DisplayData extends Observable {
     
     /**
@@ -23,13 +31,43 @@ public class DisplayData extends Observable {
      */
     public static final Structure STRUCT = Structure.BOX;
     
+    /**
+     * The history manager of the last unchecked sudoku board states.
+     */
     private final SudokuHistory history;
+    
+    /**
+     * The solver that is used to solve the sudoku board.
+     */
     private final SudokuSolver solver;
+    
+    /**
+     * The amount of rows in a box.
+     */
     private final int boxRows;
+    
+    /**
+     * The amount of columns in a box.
+     */
     private final int boxCols;
+    
+    /**
+     * The amount of numbers in a box. This variable should always equal the
+     * product of {@link DisplayData#boxRows} and {@link DisplayData#boxCols}.
+     */
     private final int numbers;
+    
+    /**
+     * The unchecked board which may contain invalid or unsolvable sudokus.
+     */
     private int[][] uncheckedBoard;
     
+    /**
+     * Creates a new data model based on the given sudoku.
+     * 
+     * @param intelligentBoard The sudoku board containing all initially set
+     *                         cells.
+     */
     public DisplayData(Board intelligentBoard) {
         numbers = intelligentBoard.getNumbers();
         boxCols = intelligentBoard.getBoxColumns();
@@ -51,6 +89,15 @@ public class DisplayData extends Observable {
         solver.addSaturator(new EnforcedCell());
     }
 
+    /**
+     * Returns the value of the cell at the given position in the unchecked
+     * board.
+     * 
+     * @param major The major coordinate of the requested cell.
+     * @param minor The minor coordinate of the requested cell.
+     * @return The value of the requested cell, may be 
+     *         {@link DisplayData#UNSET_CELL}.
+     */
     public int getCell(int major, int minor) {
         assertIndexInRange(major);
         assertIndexInRange(minor);
@@ -58,6 +105,14 @@ public class DisplayData extends Observable {
         return uncheckedBoard[major][minor];
     }
     
+    /**
+     * Sets the value of the cell at the given position in the unchecked
+     * board and notifies the observers about a possible change.
+     * 
+     * @param major The major coordinate of the cell that should be changed.
+     * @param minor The minor coordinate of the cell that should be changed.
+     * @param value The value the cell should be set to.
+     */
     public void setCell(int major, int minor, int value) {
         assertIndexInRange(major);
         assertIndexInRange(minor);
@@ -73,13 +128,25 @@ public class DisplayData extends Observable {
         notifyObservers();
     }
     
+    /**
+     * Throws an {@link IllegalArgumentException} if the index is not in the
+     * valid range for the unchecked board.
+     * 
+     * @param index The index that should be checked.
+     */
     private void assertIndexInRange(int index) {
         if ((index < 0) || (index >= numbers)) {
             throw new IllegalArgumentException("The index \"" + index 
                     + "\" is out of range for the current board size.");
         }
     }
-    
+
+    /**
+     * Throws an {@link IllegalArgumentException} if the value is not in the
+     * valid range for the unchecked board.
+     * 
+     * @param value The value that should be checked.
+     */
     private void assertValueInRange(int value) {
         if ((value != UNSET_CELL) && ((value <= 0) || (value > numbers))) {
             throw new IllegalArgumentException("The value \"" + value 
@@ -87,18 +154,38 @@ public class DisplayData extends Observable {
         }
     }
     
+    /**
+     * Returns the amount of rows in a box of the unchecked board.
+     * 
+     * @return The amount of box-rows.
+     */
     public int getBoxRows() {
         return boxRows;
     }
-
+    
+    /**
+     * Returns the amount of columns in a box of the unchecked board.
+     * 
+     * @return The amount of box-cols.
+     */
     public int getBoxCols() {
         return boxCols;
     }
-
+    
+    /**
+     * Returns the amount of numbers in a box of the unchecked board.
+     * 
+     * @return The amount of numbers in a box.
+     */
     public int getNumbers() {
         return numbers;
     }
 
+    /**
+     * Checks if the current unchecked board is completely filled.
+     * 
+     * @return {@code true} if all cells of the board are set to a value.
+     */
     public boolean isFilled() {
         for (int[] box : uncheckedBoard) {
             for (int cell : box) {
@@ -209,6 +296,14 @@ public class DisplayData extends Observable {
         notifyObservers();
     }
     
+    /**
+     * Tries to generate an intelligent board from the current unchecked board
+     * and then tries to find the first solution for this board.
+     * 
+     * @return The solved intelligent board.
+     * @throws InvalidSudokuException The unchecked board is an invalid sudoku.
+     * @throws UnsolvableSudokuException The sudoku cannot be solved.
+     */
     public Board getSolvedBoard()
             throws InvalidSudokuException, UnsolvableSudokuException {
         Board initialBoard = generateIntelligentBoard();
@@ -219,6 +314,16 @@ public class DisplayData extends Observable {
         return solvedBoard;
     }
     
+    /**
+     * Tries to generate an intelligent board from the current unchecked board
+     * and then tries to find the first solution for this board. It only applies
+     * one cell from the found solution to an intelligent board and returns it.
+     * 
+     * @return The intelligent board that is equal to the unchecked board except
+     *         one valid suggestion for a cell.
+     * @throws InvalidSudokuException The unchecked board is an invalid sudoku.
+     * @throws UnsolvableSudokuException The sudoku cannot be solved.
+     */
     public Board getBoardWithSuggestion() 
             throws InvalidSudokuException, UnsolvableSudokuException {
         if (isFilled()) {

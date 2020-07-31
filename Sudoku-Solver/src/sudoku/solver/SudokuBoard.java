@@ -24,6 +24,11 @@ public class SudokuBoard implements Board {
      * @param boxCols The amount of columns per box.
      */
     public SudokuBoard(int boxRows, int boxCols) {
+        if ((boxRows < 1) || (boxCols < 1)) {
+            throw new IllegalArgumentException(
+                    "Rows and columns per box must be both greater than 1.");
+        }
+        
         this.boxRows = boxRows;
         this.boxCols = boxCols;
         numbers = boxRows * boxCols;
@@ -39,13 +44,14 @@ public class SudokuBoard implements Board {
 
     /**
      * {@inheritDoc}
-     * <p>Setting a cells content to a number removes this number from the 
+     * <p>
+     * Setting a cells content to a number removes this number from the 
      * possible values in all other cells sharing a structure with the specified
-     * cell.</p>
-     * <p>A sudoku is seen as unsolvable if and only if a structure contains a
+     * cell.
+     * <p>
+     * A sudoku is seen as unsolvable if and only if a structure contains a
      * duplicate or a cell that can not be set to any number without causing a 
      * duplicate. It does not check if every structure can contain all numbers.
-     * </p>
      * 
      * @throws IllegalStateException Trying to overwrite a fixed cell.
      */

@@ -6,8 +6,16 @@ import java.util.LinkedList;
 import sudoku.util.Observable;
 import sudoku.util.Observer;
 
+/**
+ * This class manages all previous states of a sudoku data model and provides
+ * the functionality to go back to the last state. New states of the data 
+ * model are automatically stored using the observer pattern.
+ */
 public class SudokuHistory implements Observer {
     
+    /**
+     * The last sudoku board states as a stack.
+     */
     private final Deque<int[][]> sudokuHistoryData;
     
     /**
@@ -39,7 +47,7 @@ public class SudokuHistory implements Observer {
      * <p>
      * The initial state of the sudoku always remains in the history. If the
      * current state is the only and therefore initial state, {@code null} will
-     * be returned. If no sudoku is loaded {@code null} is returned as well.
+     * be returned.
      * 
      * @return The state of the sudoku after reverting the last change or 
      *         {@code null} if there are no changes that could be reverted.
@@ -64,6 +72,9 @@ public class SudokuHistory implements Observer {
         }
     }
 
+    /**
+     * Saves a copy of the current data model state.
+     */
     @Override
     public void update(Observable observable, Object argument) {
         if (observable instanceof DisplayData) {

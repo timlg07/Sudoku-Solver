@@ -16,6 +16,9 @@ import sudoku.solver.Structure;
 import sudoku.util.Observable;
 import sudoku.util.Observer;
 
+/**
+ * This class handles the graphical representation of a sudoku board.
+ */
 public class GameBoardPanel extends Container implements Observer {
 
     private static final long serialVersionUID = 770590847429244978L;
@@ -26,9 +29,14 @@ public class GameBoardPanel extends Container implements Observer {
     private static final Border BOX_BORDER 
             = BorderFactory.createBevelBorder(BevelBorder.LOWERED);
     
+    /**
+     * All cells of the sudoku board.
+     */
     private final List<SudokuCell> cells = new ArrayList<>();
     
     /**
+     * Creates a new {@code GameBoardPanel} that gets updated if the given data
+     * model changes.
      * 
      * @param data The board data that should be visualized, not {@code null}.
      */
@@ -76,6 +84,9 @@ public class GameBoardPanel extends Container implements Observer {
         }
     }
 
+    /**
+     * Updates the values of all cells in this board.
+     */
     @Override
     public void update(Observable observable, Object argument) {
         /*
@@ -86,6 +97,14 @@ public class GameBoardPanel extends Container implements Observer {
         cells.forEach(SudokuCell::updateValue);
     }
     
+    /**
+     * Enables or disables the popup menus of all cells in this board. 
+     * This should be used to prevent modification of the sudoku board during 
+     * ongoing operations on it.
+     * 
+     * @param enabled Whether the popup menus should be set to enabled or 
+     *                disabled.
+     */
     public void setPopupsEnabled(boolean enabled) {
         cells.forEach(c -> c.setPopupMenuEnabled(enabled));
     }

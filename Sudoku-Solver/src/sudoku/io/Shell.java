@@ -29,7 +29,7 @@ public final class Shell {
      * Private constructor to prevent instantiation. 
      */
     private Shell() {
-        throw new AssertionError();
+        throw new AssertionError("This class should not be instantiated.");
     }
 
     /**
@@ -59,7 +59,7 @@ public final class Shell {
      * blank lines.
      * 
      * @param line The line that should be processed.
-     * @return whether the program should continue execution or terminate after 
+     * @return Whether the program should continue execution or terminate after 
      *         the current line of input is processed.
      */
     private static boolean processLine(String line) {
@@ -88,7 +88,7 @@ public final class Shell {
      * If the first token of the input is a valid command, it gets executed.
      * 
      * @param tokenizedInput The input containing command and parameters.
-     * @return whether the program should continue execution or terminate after 
+     * @return Whether the program should continue execution or terminate after 
      *         the current command was executed.
      */
     private static boolean executeCommand(String[] tokenizedInput) {
@@ -141,8 +141,8 @@ public final class Shell {
             List<Board> solutions 
                 = currentSolver.findAllSolutions(currentBoard);
             
-            if (solutions.size() == 0) {
-                printError("This board is unsolvable");
+            if (solutions.isEmpty()) {
+                printError("This board is unsolvable.");
             } else {
             
                 // Sort all sudokus and join their string representation.
@@ -247,7 +247,7 @@ public final class Shell {
      */
     private static void prettyPrintSolved(Board board) {
         if (board == null) {
-            printError("This board is unsolvable");
+            printError("This board is unsolvable.");
         } else {
             System.out.println(board.prettyPrint());
         }

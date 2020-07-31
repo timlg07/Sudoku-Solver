@@ -28,7 +28,7 @@ public final class SudokuFileParser {
      * Private constructor to prevent instantiation. 
      */
     private SudokuFileParser() {
-        throw new AssertionError();
+        throw new AssertionError("This class should not be instantiated.");
     }
     
     /**
@@ -72,7 +72,8 @@ public final class SudokuFileParser {
      * @return The created board.
      * @throws ParseException The first line is invalid.
      */
-    private static Board createBoard(String[] dimensions) throws ParseException {
+    private static Board createBoard(String[] dimensions) 
+            throws ParseException {
         if (dimensions.length >= 2) {
             Optional<Integer> rows = parseInt(dimensions[0]);
             Optional<Integer> cols = parseInt(dimensions[1]);

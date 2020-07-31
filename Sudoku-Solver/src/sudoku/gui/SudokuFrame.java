@@ -10,7 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -33,24 +33,23 @@ import sudoku.solver.UnsolvableSudokuException;
 
 /**
  * The custom JFrame that is the main window of the graphical user interface.
- * It contains a {@link SudokuMenuBar} and, if a file was loaded, an editable
- * sudoku consisting of {@link SudokuCell}s.
+ * It contains a simple menu-bar and, if a file was loaded, an editable sudoku.
  */
 public class SudokuFrame extends JFrame {
     
-    private static final long serialVersionUID = 1L;
-    
+    private static final long serialVersionUID = 5099335190420782125L;
+
     /**
      * The preferred size of the initial content pane containing only the info 
      * text.
      */
-    private static final Dimension PREF_SIZE = new Dimension(400, 300);
+    private static final Dimension PREF_SIZE_INITIAL = new Dimension(400, 300);
     
     /**
-     * The minimum size the window can have while it still will be displayed as
-     * a proper window and show the menu bar.
+     * The minimum size the window can have. This sizes ensures that it will 
+     * still be displayed as a proper window and show the menu bar.
      */
-    private static final Dimension MIN_SIZE = new Dimension(240, 150);
+    private static final Dimension MIN_SIZE = new Dimension(240, 160);
     
     /**
      * The filter that will only accept sudoku files (with the extension .sud).
@@ -59,32 +58,41 @@ public class SudokuFrame extends JFrame {
             = new FileNameExtensionFilter("Sudoku File", "sud");
     
     /**
-     * The data model which stores the currently displayed sudoku and provides
-     * operations on it.
-     */
-    private DisplayData currentData;
-    
-    private GameBoardPanel currentGameBoardPanel;
-    
-    /**
-     * A collection of menu items that will perform operations on the current 
-     * sudoku if the user performs an action on them. They can be disabled
-     * temporarily when the sudoku should or cannot be edited.
-     */
-    private Collection<JMenuItem> operationsOnSudoku = new ArrayList<>();
-    
-    /**
-     * The file chooser that should be used to for selecting sudoku files.
+     * The file chooser that should be used to select sudoku files.
      * <p>
      * Using only one instance of JFileChooser, the last folder will be
      * remembered.
      */
     private final JFileChooser fileChooser = new JFileChooser();
     
+    /**
+     * A collection of menu items that will perform operations on the current 
+     * sudoku if the user performs an action on them. They can be disabled
+     * temporarily when the sudoku should or cannot be edited.
+     */
+    private final List<JMenuItem> operationsOnSudoku = new ArrayList<>();
+    
+    /**
+     * The data model which stores the currently displayed sudoku and provides
+     * operations on it.
+     */
+    private DisplayData currentData;
+    
+    /**
+     * The representation of the current sudoku board that gets updated by the
+     * data model.
+     */
+    private GameBoardPanel currentGameBoardPanel;
+    
+    /**
+     * The current calculation thread that is doing an operation on the sudoku
+     * or {@code null} if no operation is running.
+     */
     private Thread calculationThread;
 
     /**
-     * Constructs and shows a SudokuFrame window (...) TODO: rewrite JavaDoc
+     * Constructs and shows a SudokuFrame window with a default information text
+     * about how to get started and a menu bar with all available operations.
      */
     public SudokuFrame() {
         super("Sudoku");
@@ -92,6 +100,11 @@ public class SudokuFrame extends JFrame {
         fileChooser.setFileFilter(SUDOKU_FILE_FILTER);
         
         setJMenuBar(createMenuBar());
+        
+        /*
+         * Initially disable all operations on a sudoku, because no sudoku is
+         * loaded.
+         */
         setEnableStates(false);
         
         // The info text that initially explains why the window is empty.
@@ -99,13 +112,13 @@ public class SudokuFrame extends JFrame {
         
         // Apply basic inline CSS to the info text for proper line wrapping.
         add(new JLabel("<html><body style='width: 100%; text-align: center;'>" 
-                + info + "</body></html>", SwingConstants.CENTER));
+                       + info + "</body></html>", SwingConstants.CENTER));
 
         /*
          * By setting the pref. size on the content pane, it won't be necessary
          * to restore the default behavior once a sudoku is loaded.
          */
-        getContentPane().setPreferredSize(PREF_SIZE);
+        getContentPane().setPreferredSize(PREF_SIZE_INITIAL);
         
         setMinimumSize(MIN_SIZE);
         pack();
@@ -128,8 +141,12 @@ public class SudokuFrame extends JFrame {
     
     /**
      * Sets the enabled states of all components, which can do operations on the
-     * current sudoku, to the state stored in the data model. This should lock
-     * (or unlock) all operations on the current sudoku.
+     * current sudoku, to the given state. This locks (or unlocks) all menu
+     * items that can change the sudoku and all popup-menus of the current
+     * sudoku.
+     * 
+     * @param allowed Whether operations on the sudoku are currently allowed or
+     *                not.
      */
     private void setEnableStates(boolean allowed) {
         operationsOnSudoku.forEach(o -> o.setEnabled(allowed));
@@ -139,12 +156,13 @@ public class SudokuFrame extends JFrame {
     }
 
     /**
-     * Completely recreates the components used to display the sudoku board.
+     * Completely (re)creates the components used to display the sudoku board.
      * This is needed when the first sudoku or a new sudoku with different sizes
      * is loaded.
      * <p>
      * This method will replace the current content pane and then resize and 
-     * relocate the frame.
+     * relocate the frame. It also stops the calculation thread if there are
+     * ongoing calculations and enables all operations on a sudoku again.
      */
     private void resetBoardView() {
         // A data model needs to be loaded. 
@@ -180,12 +198,6 @@ public class SudokuFrame extends JFrame {
         JMenu editMenu = new JMenu("Edit");
         JMenu solveMenu = new JMenu("Solve");
 
-        /*
-         * These menus contain only operations on a sudoku, so they can be
-         * locked completely.
-         */
-        operationsOnSudoku.add(editMenu);
-        operationsOnSudoku.add(solveMenu);
         setEnableStates(false); // Initially there is no sudoku loaded.
         
         JMenuItem open = fileMenu.add("Open");
@@ -193,6 +205,10 @@ public class SudokuFrame extends JFrame {
         JMenuItem undo = editMenu.add("Undo");
         JMenuItem suggest = solveMenu.add("Suggest Value");
         JMenuItem solve = solveMenu.add("Solve");
+        
+        operationsOnSudoku.add(undo);
+        operationsOnSudoku.add(suggest);
+        operationsOnSudoku.add(solve);
 
         setCtrlAccelerator(open, KeyEvent.VK_O);
         setCtrlAccelerator(exit, KeyEvent.VK_X);
@@ -213,36 +229,34 @@ public class SudokuFrame extends JFrame {
         exit.addActionListener(evt -> dispose());
         undo.addActionListener(evt -> currentData.undo());
         
-        /*
-         * Execute the solve and suggest operations on a seperate Thread. 
-         * This ensures that the Swing EventDispatcher stays responsive and can
-         * process user interaction while the sudoku gets solved.
-         */
         solve.addActionListener(evt -> {
-            calculationThread = new SudokuOperationThread(true) {
+            calculationThread = new Thread(new SudokuOperation(true) {
                 
                 @Override
                 protected Board boardSupplierOperation() 
-                        throws InvalidSudokuException, 
+                        throws InvalidSudokuException,
                                UnsolvableSudokuException {
                     return currentData.getSolvedBoard();
                 }
-            };
+            });
+            
             setEnableStates(false);
             calculationThread.start();
         });
+        
         suggest.addActionListener(e -> {
             if (currentData.isFilled()) {
                 SudokuDialogMessages.showErrorAlreadyFilled(SudokuFrame.this);
             } else {
-                calculationThread = new SudokuOperationThread(false) {
+                calculationThread = new Thread(new SudokuOperation(false) {
+                    
                     @Override
                     protected Board boardSupplierOperation() 
                             throws InvalidSudokuException, 
                                    UnsolvableSudokuException  {
                         return currentData.getBoardWithSuggestion();
                     }
-                };
+                });
                 
                 setEnableStates(false);
                 calculationThread.start();
@@ -255,6 +269,13 @@ public class SudokuFrame extends JFrame {
         return menuBar;
     }
     
+    /**
+     * Sets the accelerator of the given menu item to the key stroke consisting
+     * of the given key event masked with the CTRL key modifier.
+     * 
+     * @param component The menu item the accelerator should be set on.
+     * @param key The numeric code for a keyboard key.
+     */
     private void setCtrlAccelerator(JMenuItem component, int key) {
         component.setAccelerator(
                 KeyStroke.getKeyStroke(key, KeyEvent.CTRL_DOWN_MASK));
@@ -265,6 +286,9 @@ public class SudokuFrame extends JFrame {
      */
     private class OpenFileActionListener implements ActionListener {
 
+        /**
+         * Shows a file chooser dialog and then loads the selected file.
+         */
         @Override
         public void actionPerformed(ActionEvent evt) {
             int fileChooserState = fileChooser.showOpenDialog(SudokuFrame.this);
@@ -273,6 +297,13 @@ public class SudokuFrame extends JFrame {
             }
         }
         
+        /**
+         * Loads the content of a sudoku file in the data model and shows a
+         * representation of it. Shows an error message if the sudoku file
+         * cannot be loaded and parsed to a valid sudoku.
+         * 
+         * @param sudokuFile The file that should be loaded as sudoku.
+         */
         private void loadSudokuFile(File sudokuFile) {
             try {
                 Board board = SudokuFileParser.parseToBoard(sudokuFile);
@@ -288,17 +319,47 @@ public class SudokuFrame extends JFrame {
         }
     }
     
-    private abstract class SudokuOperationThread extends Thread {
+    /**
+     * A {@code SudokuOperation} runnable should be used in threads to perform
+     * heavy calculations on the current sudoku. Using a seperate thread ensures
+     * that the Swing EventDispatcher stays responsive and can process user
+     * interaction while the sudoku gets changed.
+     */
+    private abstract class SudokuOperation implements Runnable {
         
+        /**
+         * Signalizes if the operation is expected to always create a completely
+         * solved sudoku.
+         */
         private final boolean isSolutionExpected;
         
-        protected SudokuOperationThread(boolean isSolutionExpected) {
+        /**
+         * Creates a new {@code SudokuOperationThread} with the given solution
+         * expected flag.
+         * 
+         * @param isSolutionExpected Whether the operation is expected to always
+         *                           create a completely solved sudoku or not.
+         */
+        protected SudokuOperation(boolean isSolutionExpected) {
             this.isSolutionExpected = isSolutionExpected;
         }
         
+        /**
+         * Performs the operation on the sudoku that may take a while and that
+         * produces a result in the form of a {@link Board}.
+         * 
+         * @return The result of the operation.
+         * @throws InvalidSudokuException The current sudoku is invalid.
+         * @throws UnsolvableSudokuException The current sudoku is unsolvable.
+         */
         protected abstract Board boardSupplierOperation() 
                 throws InvalidSudokuException, UnsolvableSudokuException;
         
+        /**
+         * Executes the operation on the sudoku and then applies its result to
+         * the data model. Sets the operations on the sudoku to allowed and
+         * shows dialogs to the user if necessary.
+         */
         @Override
         public void run() {
             try {
@@ -320,8 +381,10 @@ public class SudokuFrame extends JFrame {
                 });
             } catch (InvalidSudokuException exc) {
                 SudokuDialogMessages.showErrorInvalid(SudokuFrame.this);
+                setEnableStates(true);
             } catch (UnsolvableSudokuException exc) {
                 SudokuDialogMessages.showErrorUnsolvable(SudokuFrame.this);
+                setEnableStates(true);
             }
         }
     }
@@ -334,7 +397,7 @@ public class SudokuFrame extends JFrame {
     public void stopOngoingCalculation() {
         if (calculationThread != null) {
             calculationThread.stop();
-            calculationThread = null; // The reference is not needed anymore.
+            calculationThread = null;
         }
         setEnableStates(true);
     }
