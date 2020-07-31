@@ -12,3 +12,4 @@ You can also let the application solve the sudoku completely for you if you want
 Of course this works for sudokus of all sizes, here are some examples:
 ![A solved 15 by 15 sudoku.](/screenshots/sudoku-3x5-solved-msg.png)  
 ![An unsolved 8 by 8 sudoku.](/screenshots/sudoku-2x4-unsolved.png)  
+![An 6 by 6 sudoku in progress.](/screenshots/sudoku-2x3-inprogress.png)  
