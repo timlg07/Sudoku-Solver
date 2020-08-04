@@ -183,7 +183,7 @@ public class SudokuCell extends JLabel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 data.setCell(majorIndex, minorIndex, assignedValue);
-                Component rootFrame = SudokuCell.this.getRootPane().getParent();
+                Component rootFrame = SudokuCell.this.getTopLevelAncestor();
                 SudokuDialogMessages.showMessageIfFilled(rootFrame, data);
             }
         }
