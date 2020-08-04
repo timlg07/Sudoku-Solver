@@ -340,7 +340,7 @@ public class SudokuFrame extends JFrame {
          * @param isSolutionExpected Whether the operation is expected to always
          *                           create a completely solved sudoku or not.
          */
-        protected SudokuOperation(boolean isSolutionExpected) {
+        private SudokuOperation(boolean isSolutionExpected) {
             this.isSolutionExpected = isSolutionExpected;
         }
         
